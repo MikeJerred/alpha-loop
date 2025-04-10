@@ -15,6 +15,7 @@
     "lint": "eslint ."
   },
   "dependencies": {
+    "@bgd-labs/aave-address-book": "^4.18.0",
     "abitype": "^1.0.8",
     "viem": "^2.25.0"
   },

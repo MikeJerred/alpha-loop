@@ -27,7 +27,7 @@
       <span>{loop.protocol}</span>
       <span>{loop.collateralAsset.symbol}</span>
       <span>{loop.loanAsset.symbol}</span>
-      <span><Currency value={loop.liquidity} symbol="" /></span>
+      <span><Currency value={loop.liquidityUSD} symbol="" /></span>
       <span><Percent value={loop.ltv} /></span>
       <span>{loop.leverage.toFixed(1)}x</span>
       <!-- <span><Percent value={loop.collateralApr} /></span>

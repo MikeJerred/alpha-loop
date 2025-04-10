@@ -50,7 +50,7 @@ export const load: PageServerLoad = async ({ url }) => {
       isCorrelated(item.collateralAsset.symbol.toLowerCase(), exposure) &&
       isCorrelated(item.loanAsset.symbol.toLowerCase(), exposure)
     ))
-    .filter(item => item.liquidity >= minLiquidity)
+    .filter(item => item.liquidityUSD >= minLiquidity)
     .map(async item => {
       const supplyTokenApr = await getTokenApr(item.collateralAsset.symbol, item.chainId, item.collateralAsset.address);
       const collateralApr = (1 + item.supplyApr.weekly) * (1 + supplyTokenApr) - 1;

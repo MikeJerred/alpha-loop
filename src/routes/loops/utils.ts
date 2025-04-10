@@ -39,7 +39,7 @@ export type YieldLoop = {
     monthly: number,
     yearly: number,
   },
-  liquidity: number,
+  liquidityUSD: number,
   ltv: number,
   link: string,
 };
@@ -59,6 +59,9 @@ export function isCorrelated(symbol: string, type: 'btc' | 'eth' | 'usd') {
     case 'eth':
       return symbol.toLowerCase().includes('eth');
     case 'usd':
-      return symbol.toLowerCase().includes('usd') || symbol.toLowerCase().includes('usr') || symbol.toLowerCase().includes('rlp');
+      return symbol.toLowerCase().includes('usd') ||
+      symbol.toLowerCase().includes('usr') ||
+      symbol.toLowerCase().includes('rlp') ||
+      symbol.toLowerCase() === 'gho';
   }
 }

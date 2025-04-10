@@ -8,6 +8,11 @@ const defiLlamaPools = {
   ezeth: 'e28e32b5-e356-41d9-8dc7-a376ece56619',
   woeth: '423681e3-4787-40ce-ae43-e9f67c5269b3',
   wsuperoethb: 'f388573e-5c0f-4dac-9f70-116a4aabaf17',
+  oseth: '4d01599c-69ae-41a3-bae1-5fab896f04c8',
+  reth: 'd4b3c522-6127-4b89-bedf-83641cdcd2eb',
+  susds: 'd8c4eff5-c8a9-46fc-a888-057c4c668e72',
+  susde: '66985a81-9c51-46ca-9977-42b4fe7bc6df',
+  ethx: '90bfb3c2-5d35-4959-a275-ba5085b08aa3',
 };
 
 export async function getTokenApr(symbol: string, chainId: number, address: string) {

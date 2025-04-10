@@ -123,7 +123,7 @@ export async function searchMorpho(chains: readonly Chain[]): Promise<YieldLoop[
         monthly: Math.log(1 + item.state.monthlyBorrowApy),
         yearly: Math.log(1 + item.state.yearlyBorrowApy),
       },
-      liquidity: typeof item.state.liquidityAssetsUsd === 'string'
+      liquidityUSD: typeof item.state.liquidityAssetsUsd === 'string'
         ? Number(BigInt(item.state.liquidityAssetsUsd) / 10n**18n)
         : item.state.liquidityAssetsUsd,
       ltv: 0.97 * Number(BigInt(item.lltv) / 10n**10n) / 10**8, // allow for 3% price drop
