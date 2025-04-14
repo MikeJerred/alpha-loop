@@ -1,5 +1,7 @@
 <script lang="ts">
+  import Chain from '$lib/client/Chain.svelte';
   import Currency from '$lib/client/Currency.svelte';
+  import Protocol from '$lib/client/Protocol.svelte';
   import Percent from '$lib/client/Percent.svelte';
   import type { PageProps } from './$types';
 
@@ -23,10 +25,10 @@
   <span>Total Yield</span>
   {#each data.loops as loop}
     <a class="row" href={loop.link} target="_blank">
-      <span>{loop.chainId}</span>
-      <span>{loop.protocol}</span>
-      <span>{loop.collateralAsset.symbol}</span>
-      <span>{loop.loanAsset.symbol}</span>
+      <span><Chain id={loop.chainId} /></span>
+      <span><Protocol name={loop.protocol} /></span>
+      <span>{loop.supplyAsset.symbol}</span>
+      <span>{loop.borrowAsset.symbol}</span>
       <span><Currency value={loop.liquidityUSD} symbol="" /></span>
       <span><Percent value={loop.ltv} /></span>
       <span>{loop.leverage.toFixed(1)}x</span>

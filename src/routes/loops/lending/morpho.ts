@@ -1,4 +1,5 @@
-import { toChain, toFilteredChainIds, type Chain, type ChainId, type YieldLoop } from '../utils';
+import { chains, toFilteredChainIds, type ChainId, type ChainName } from '$lib/core/chains';
+import { type YieldLoop } from '../utils';
 
 type Results = {
   data: {
@@ -36,7 +37,7 @@ type Results = {
   }
 };
 
-export async function searchMorpho(chains: readonly Chain[]): Promise<YieldLoop[]> {
+export async function searchMorpho(chains: readonly ChainName[]): Promise<YieldLoop[]> {
   const url = 'https://blue-api.morpho.org/graphql';
   const query = `query ($where: MarketFilters) {
     markets(first: 1000, where: $where) {
@@ -74,7 +75,7 @@ export async function searchMorpho(chains: readonly Chain[]): Promise<YieldLoop[
     }
   }`;
 
-  const chainIds = toFilteredChainIds(chains, ['ethereum', 'base']);
+  const chainIds = toFilteredChainIds(chains, ['mainnet', 'base']);
 
   if (chainIds.length === 0) return [];
 
@@ -103,11 +104,11 @@ export async function searchMorpho(chains: readonly Chain[]): Promise<YieldLoop[
     .map(item => ({
       protocol: 'morpho',
       chainId: item.morphoBlue.chain.id as ChainId,
-      loanAsset: {
+      borrowAsset: {
         address: item.loanAsset.address,
         symbol: item.loanAsset.symbol,
       },
-      collateralAsset: {
+      supplyAsset: {
         address: item.collateralAsset.address,
         symbol: item.collateralAsset.symbol,
       },
@@ -127,6 +128,10 @@ export async function searchMorpho(chains: readonly Chain[]): Promise<YieldLoop[
         ? Number(BigInt(item.state.liquidityAssetsUsd) / 10n**18n)
         : item.state.liquidityAssetsUsd,
       ltv: 0.97 * Number(BigInt(item.lltv) / 10n**10n) / 10**8, // allow for 3% price drop
-      link: `https://app.morpho.org/${toChain(item.morphoBlue.chain.id as ChainId)}/market/${item.uniqueKey}`
+      link: `https://app.morpho.org/${getChainForUrl(item.morphoBlue.chain.id)}/market/${item.uniqueKey}`
     }));
 }
+
+const getChainForUrl = (id: number) => id === chains.mainnet.id ? 'ethereum'
+  : id === chains.base.id ? 'base'
+  : null;

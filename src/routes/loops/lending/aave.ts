@@ -7,30 +7,27 @@ import {
   AaveV3Scroll,
   AaveV3ZkSync,
 } from '@bgd-labs/aave-address-book';
-import { createPublicClient, getContract, http } from 'viem';
-import { arbitrum, base, mainnet, scroll, zksync } from 'viem/chains';
-import { IUiPoolDataProvider_ABI } from '$lib/abi/IUiPoolDataProvider';
-import { isCorrelated, toChainId, type Chain, type YieldLoop } from '../utils';
+import { getContract } from 'viem';
+import { IUiPoolDataProvider_ABI } from '$lib/abi/AaveUiPoolDataProvider';
+import { getChainId, getViemClient, type ChainName } from '$lib/core/chains';
+import { isCorrelated, type YieldLoop } from '../utils';
 
 const providersMap = {
-  ethereum: [AaveV3Ethereum, AaveV3EthereumEtherFi, AaveV3EthereumLido],
+  mainnet: [AaveV3Ethereum, AaveV3EthereumEtherFi, AaveV3EthereumLido],
   arbitrum: [AaveV3Arbitrum],
   base: [AaveV3Base],
   scroll: [AaveV3Scroll],
   zksync: [AaveV3ZkSync],
 } as const;
 
-export async function searchAave(chainsInput: readonly Chain[]): Promise<YieldLoop[]> {
+export async function searchAave(chainsInput: readonly ChainName[]): Promise<YieldLoop[]> {
   const validChains = Object.keys(providersMap) as (keyof typeof providersMap)[];
-  const chains = validChains.filter(chain => chainsInput.includes(chain));
+  const chains = validChains.filter(name => chainsInput.includes(name));
 
   const results: YieldLoop[] = [];
 
   for (const chain of chains) {
-    const client = createPublicClient({
-      chain: getViemChain(chain),
-      transport: http()
-    });
+    const client = getViemClient(chain);
 
     for (const provider of providersMap[chain]) {
       const uiPoolDataProvider = getContract({
@@ -71,7 +68,7 @@ export async function searchAave(chainsInput: readonly Chain[]): Promise<YieldLo
             ltv = Math.max(ltv, ...validEModes.map(eMode => Math.min(eMode.eMode.ltv, 0.97 * eMode.eMode.liquidationThreshold) / 10000))
           }
 
-          const chainId = toChainId(chain);
+          const chainId = getChainId(chain);
           const supplyAPRs = (await getYieldApr(supplyAsset.underlyingAsset, provider.POOL_ADDRESSES_PROVIDER, chainId))?.supply;
           const borrowAPRs = (await getYieldApr(borrowAsset.underlyingAsset, provider.POOL_ADDRESSES_PROVIDER, chainId))?.borrow;
 
@@ -80,11 +77,11 @@ export async function searchAave(chainsInput: readonly Chain[]): Promise<YieldLo
           results.push({
             protocol: 'aave',
             chainId,
-            loanAsset: {
+            borrowAsset: {
               address: borrowAsset.underlyingAsset,
               symbol: borrowAsset.symbol,
             },
-            collateralAsset: {
+            supplyAsset: {
               address: supplyAsset.underlyingAsset,
               symbol: supplyAsset.symbol,
             },
@@ -105,7 +102,7 @@ export async function searchAave(chainsInput: readonly Chain[]): Promise<YieldLo
               borrowAsset.availableLiquidity / (10n ** borrowAsset.decimals)
             ),
             ltv,
-            link: `https://app.aave.com/`,
+            link: `https://app.aave.com/reserve-overview/?underlyingAsset=${borrowAsset.underlyingAsset}`,
           });
         }
       }
@@ -113,18 +110,6 @@ export async function searchAave(chainsInput: readonly Chain[]): Promise<YieldLo
   }
 
   return results;
-}
-
-function getViemChain(chain: Chain) {
-  switch (chain) {
-    case 'arbitrum': return arbitrum;
-    case 'base': return base;
-    case 'ethereum': return mainnet;
-    case 'scroll': return scroll;
-    case 'zksync': return zksync;
-    default:
-      throw new Error(`Unsupported chain: ${chain}`);
-  }
 }
 
 type YieldCacheItem = {
