@@ -15,14 +15,14 @@
     "lint": "eslint ."
   },
   "dependencies": {
-    "@bgd-labs/aave-address-book": "^4.18.0",
+    "@bgd-labs/aave-address-book": "^4.22.3",
     "abitype": "^1.0.8",
-    "viem": "^2.25.0"
+    "viem": "^2.31.2"
   },
   "devDependencies": {
     "@eslint/compat": "^1.2.5",
     "@eslint/js": "^9.18.0",
-    "@fontsource/fira-mono": "^5.0.0",
+    "@fontsource/fira-mono": "^5.2.6",
     "@neoconfetti/svelte": "^2.0.0",
     "@playwright/test": "^1.49.1",
     "@sveltejs/adapter-auto": "^6.0.0",
