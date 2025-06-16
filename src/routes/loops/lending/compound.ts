@@ -21,6 +21,8 @@ type Data = {
 };
 
 const erc20Symbols = new Map<`0x${string}`, string>();
+// from: https://docs.compound.finance/helper-functions/#get-asset-info-by-address
+const compoundCollateralFactorScale = 1000000000000000000n;
 
 export async function searchCompound(chainNames: readonly ChainName[]): Promise<YieldLoop[]> {
   const chainIds = toFilteredChainIds(chainNames, ['mainnet', 'base', 'arbitrum', 'optimism', 'polygon', 'linea', 'mantle', 'scroll']);
@@ -86,8 +88,8 @@ export async function searchCompound(chainNames: readonly ChainName[]): Promise<
         return {
           address: assetInfo.asset,
           symbol: supplyTokenSymbol,
-          ltv: Number(1000n * assetInfo.borrowCollateralFactor / assetInfo.scale) / 1000,
-          lltv: Number(1000n * assetInfo.liquidationFactor / assetInfo.scale) / 1000,
+          ltv: Number(1000n * assetInfo.borrowCollateralFactor / compoundCollateralFactorScale) / 1000,
+          lltv: Number(1000n * assetInfo.liquidationFactor / compoundCollateralFactorScale) / 1000,
         };
       }));
 
