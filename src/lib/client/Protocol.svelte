@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { Protocol } from '$lib/core/protocols';
-  import aaveIcon from '$lib/images/protocols/aave-light.svg';
+  import aaveIcon from '$lib/images/protocols/aave-dark.svg';
   import compoundIcon from '$lib/images/protocols/compound.svg';
   import morphoIcon from '$lib/images/protocols/morpho-light.svg';
 

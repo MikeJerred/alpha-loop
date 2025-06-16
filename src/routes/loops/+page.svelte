@@ -6,7 +6,6 @@
   import type { PageProps } from './$types';
 
   const { data }: PageProps = $props();
-
 </script>
 
 <svelte:head>
@@ -15,19 +14,21 @@
 </svelte:head>
 
 <div class="grid">
-  <div><!--Chain--></div>
-  <div><!--Protocol--></div>
-  <div>Strategy</div>
-  <div>Liquidity</div>
-  <div>Yield</div>
-  <div> = </div>
-  <div>Leverage</div>
-  <div> * </div>
-  <div>(Supply</div>
-  <div> - </div>
-  <div>Borrow</div>
-  <div> * </div>
-  <div>LTV)</div>
+  <div class="header">
+    <div class="item"><!--Chain--></div>
+    <div class="item"><!--Protocol--></div>
+    <div class="item">Strategy</div>
+    <div class="item">Liquidity</div>
+    <div class="item">Yield</div>
+    <div class="item"> = </div>
+    <div class="item">Leverage</div>
+    <div class="item"> * </div>
+    <div class="item">(Supply</div>
+    <div class="item"> - </div>
+    <div class="item">Borrow</div>
+    <div class="item"> * </div>
+    <div class="item">LTV)</div>
+  </div>
   {#each data.loops as loop}
     <a class="row" href={loop.link} target="_blank">
       <div class="item"><Chain id={loop.chainId} /></div>
@@ -53,18 +54,34 @@
     grid-template-columns: repeat(13, auto);
   }
 
+  .item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 32px;
+  }
+
+  .header {
+    display: contents;
+
+    .item {
+      font-weight: 700;
+      border-bottom: 1px solid var(--color-text);
+    }
+  }
+
   .row {
     display: contents;
-    color: black;
+    color: var(--color-text);
 
     &:nth-child(even) {
       .item {
-        background: rgba(0, 0, 0, 0.05);
+        background: rgba(255, 255, 255, 0.05);
       }
     }
   }
 
   .yield {
-    font-weight: bold;
+    font-weight: 700;
   }
 </style>
