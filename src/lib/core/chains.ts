@@ -19,7 +19,16 @@ export const chains = {
   berachain,
   gnosis,
   linea,
-  mainnet,
+  mainnet: {
+    ...mainnet,
+    rpcUrls: {
+      ...mainnet.rpcUrls,
+      default: {
+        ...mainnet.rpcUrls.default,
+        http: ['https://eth.meowrpc.com'],
+      },
+    },
+  } as const,
   mantle,
   optimism,
   polygon,

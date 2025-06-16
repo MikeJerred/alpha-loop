@@ -18,7 +18,7 @@
   "dependencies": {
     "@bgd-labs/aave-address-book": "^4.22.3",
     "abitype": "^1.0.8",
-    "viem": "^2.31.2"
+    "viem": "^2.31.3"
   },
   "devDependencies": {
     "@eslint/compat": "^1.2.5",
