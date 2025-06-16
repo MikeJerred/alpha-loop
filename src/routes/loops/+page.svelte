@@ -11,7 +11,7 @@
 
 <svelte:head>
   <title>Loops</title>
-  <meta name="description" content="Find yield loop alpha" />
+  <meta name="description" content="Find yield loop strategies" />
 </svelte:head>
 
 <div class="grid">
