@@ -13,6 +13,17 @@ const defiLlamaPools = {
   susds: 'd8c4eff5-c8a9-46fc-a888-057c4c668e72',
   susde: '66985a81-9c51-46ca-9977-42b4fe7bc6df',
   ethx: '90bfb3c2-5d35-4959-a275-ba5085b08aa3',
+  yneth: '44dd4153-aa9f-4616-9a88-e6803c86b995',
+  ynethx: 'e3c59895-d6ad-4634-b257-f599f1a1a4a0',
+  rsweth: 'eff9b43c-a80d-4bfc-9f9e-55e02a8ef619',
+  stusr: '0aedb3f6-9298-49de-8bb0-2f611a4df784',
+  wstusr: '0aedb3f6-9298-49de-8bb0-2f611a4df784',
+  rlp: '2ad8497d-c855-4840-85ad-cdc536b92ced',
+  'usd0++': '55b0893b-1dbb-47fd-9912-5e439cd3d511',
+  srusd: '402b0554-9525-40af-8703-3c59b0aa863c',
+  stusdt: 'e1b9420a-30d4-4c27-8e01-2d6cd240e1b9',
+  bsdeth: 'ca775845-b68a-4084-8d8d-29c31970a643',
+  hyusd: '8449ce9a-fc8d-4d93-991a-55113fa80a5a',
 };
 
 export async function getTokenApr(symbol: string, chainId: number, address: string) {
