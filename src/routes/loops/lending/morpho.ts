@@ -1,4 +1,5 @@
 import { chains, toFilteredChainIds, type ChainId, type ChainName } from '$lib/core/chains';
+import { apyToApr } from '$lib/core/utils';
 import { type YieldLoop } from '../utils';
 
 type Results = {
@@ -119,10 +120,10 @@ export async function searchMorpho(chains: readonly ChainName[]): Promise<YieldL
         yearly: 0,
       },
       borrowApr: {
-        daily: Math.log(1 + item.state.dailyBorrowApy),
-        weekly: Math.log(1 + item.state.weeklyBorrowApy),
-        monthly: Math.log(1 + item.state.monthlyBorrowApy),
-        yearly: Math.log(1 + item.state.yearlyBorrowApy),
+        daily: apyToApr(item.state.dailyBorrowApy),
+        weekly: apyToApr(item.state.weeklyBorrowApy),
+        monthly: apyToApr(item.state.monthlyBorrowApy),
+        yearly: apyToApr(item.state.yearlyBorrowApy),
       },
       liquidityUSD: typeof item.state.liquidityAssetsUsd === 'string'
         ? Number(BigInt(item.state.liquidityAssetsUsd) / 10n**18n)

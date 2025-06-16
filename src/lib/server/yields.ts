@@ -1,3 +1,5 @@
+import { apyToApr } from '$lib/core/utils';
+
 const defiLlamaPools = {
   wsteth: '747c1d2a-c668-4682-b9f9-296708a3dd90',
   cbeth: '0f45d730-b279-4629-8e11-ccb5cc3038b4',
@@ -32,20 +34,20 @@ export async function getTokenApr(symbol: string, chainId: number, address: stri
     const markets = await getPendleMarkets(chainId);
     const market = markets.find(({ pt }) => pt.toLowerCase() === `${chainId}-${address}`.toLowerCase());
     if (market) {
-      return Math.log(1 + market.details.impliedApy);
+      return apyToApr(market.details.impliedApy);
     }
   }
   if (symbol.startsWith('lp-')) {
     const res = await fetch(`https://api-v2.pendle.finance/core/v2/${chainId}/markets/${address}/data`);
     const { aggregatedApy } = await res.json() as { impliedApy: number, aggregatedApy: number };
-    return Math.log(1 + aggregatedApy);
+    return apyToApr(aggregatedApy);
   }
 
   if (isValidDefiLlama(symbol)) {
     const pool = defiLlamaPools[symbol];
     const res = await fetch(`https://yields.llama.fi/poolsEnriched?pool=${pool}`);
     const { data } = await res.json() as { data: { apy: number, apyMean30d: number }[] };
-    return Math.log(1 + data[0].apyMean30d / 100);
+    return apyToApr(data[0].apyMean30d / 100);
   }
 
   return 0;
