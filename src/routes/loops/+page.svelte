@@ -1,17 +1,33 @@
 <script lang="ts">
+  import { goto } from '$app/navigation';
+  import { page } from '$app/state';
   import Chain from '$lib/client/Chain.svelte';
   import Currency from '$lib/client/Currency.svelte';
   import Protocol from '$lib/client/Protocol.svelte';
   import Percent from '$lib/client/Percent.svelte';
+  import { throttle } from '$lib/core/utils';
   import type { PageProps } from './$types';
 
   const { data }: PageProps = $props();
+
+  const setLiquidity = throttle((value: string) => {
+    goto(`?liquidity=${value}`, { noScroll: true });
+  });
 </script>
 
 <svelte:head>
   <title>Loops</title>
   <meta name="description" content="Find yield loop strategies" />
 </svelte:head>
+
+<form>
+  <div class="form-control">
+    <input type="range"
+      value={isNaN(parseInt(page.params.liquidity)) ? 10_000 : +page.params.liquidity}
+      oninput={event => setLiquidity(event.currentTarget.value)}
+    >
+  </div>
+</form>
 
 <div class="grid">
   <div class="header">
@@ -49,6 +65,10 @@
 </div>
 
 <style>
+  form {
+    margin-bottom: 40px;
+  }
+
   .grid {
     display: grid;
     grid-template-columns: repeat(13, auto);
