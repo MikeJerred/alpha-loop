@@ -8,24 +8,6 @@
   ];
 </script>
 
-<header>
-  <nav>
-    <ul>
-      {#each routes as route}
-        <li aria-current={page.url.pathname === route.url ? 'page' : undefined}>
-          <a href={route.url}>{route.text}</a>
-        </li>
-      {/each}
-    </ul>
-  </nav>
-
-  <div class="corner">
-    <a href="https://github.com/MikeJerred/alpha-loop" target="_blank">
-      <img src={github} alt="GitHub" />
-    </a>
-  </div>
-</header>
-
 <style>
   header {
     display: flex;
@@ -102,3 +84,21 @@
     }
   }
 </style>
+
+<header>
+  <nav>
+    <ul>
+      {#each routes as route}
+        <li aria-current={page.url.pathname === route.url ? 'page' : undefined}>
+          <a href={route.url}>{route.text}</a>
+        </li>
+      {/each}
+    </ul>
+  </nav>
+
+  <div class="corner">
+    <a href="https://github.com/MikeJerred/alpha-loop" target="_blank">
+      <img src={github} alt="GitHub" />
+    </a>
+  </div>
+</header>

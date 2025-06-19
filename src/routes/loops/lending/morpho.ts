@@ -101,7 +101,7 @@ export async function searchMorpho(chains: readonly ChainName[]): Promise<YieldL
   const results = await res.json() as Results;
 
   return results.data.markets.items
-    .filter(item => item.collateralAsset && item.loanAsset && item.lltv)
+    .filter(item => item.collateralAsset && item.loanAsset && item.lltv && item.morphoBlue?.chain && item.state)
     .map(item => ({
       protocol: 'morpho',
       chainId: item.morphoBlue.chain.id as ChainId,

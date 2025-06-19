@@ -25,7 +25,8 @@ export const chains = {
       ...mainnet.rpcUrls,
       default: {
         ...mainnet.rpcUrls.default,
-        http: ['https://eth.meowrpc.com'],
+        http: ['https://eth-mainnet.public.blastapi.io'],
+        // http: ['https://eth.meowrpc.com'],
       },
     },
   } as const,

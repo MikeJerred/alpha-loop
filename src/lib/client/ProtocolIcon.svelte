@@ -4,24 +4,26 @@
   import compoundIcon from '$lib/images/protocols/compound.svg';
   import morphoIcon from '$lib/images/protocols/morpho-light.svg';
 
-  let { name, size = 16 }: { name: Protocol, size?: number } = $props();
+  let { id, size = 16 }: { id: Protocol, size?: number } = $props();
 
   const image = $derived(
-    name === 'aave' ? aaveIcon
-    : name === 'compound' ? compoundIcon
-    : name === 'morpho' ? morphoIcon
+    id === 'aave' ? aaveIcon
+    : id === 'compound' ? compoundIcon
+    : id === 'morpho' ? morphoIcon
     : null
   );
   const title = $derived(
-    name === 'aave' ? 'Aave'
-    : name === 'compound' ? 'Compound'
-    : name === 'morpho' ? 'Morpho'
+    id === 'aave' ? 'Aave'
+    : id === 'compound' ? 'Compound'
+    : id === 'morpho' ? 'Morpho'
     : null
   );
 </script>
 
 <style>
   img {
+    width: 16px;
+    height: 16px;
     vertical-align: middle;
   }
 </style>

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { chains, getChainName, type ChainId } from '$lib/core/chains';
+  import { type ChainId, chains, getChainName } from '$lib/core';
   import arbitrumIcon from '$lib/images/chains/arbitrum.svg';
   import baseIcon from '$lib/images/chains/base.svg';
   import berachainIcon from '$lib/images/chains/berachain.svg';
@@ -32,6 +32,8 @@
 
 <style>
   img {
+    width: 16px;
+    height: 16px;
     vertical-align: middle;
   }
 </style>

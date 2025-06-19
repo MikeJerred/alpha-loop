@@ -5,14 +5,6 @@
   let { children } = $props();
 </script>
 
-<div class="app">
-  <Header />
-
-  <main>
-    {@render children()}
-  </main>
-</div>
-
 <style>
   .app {
     display: flex;
@@ -31,3 +23,11 @@
     box-sizing: border-box;
   }
 </style>
+
+<div class="app">
+  <Header />
+
+  <main>
+    {@render children()}
+  </main>
+</div>

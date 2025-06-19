@@ -17,6 +17,7 @@ const defiLlamaPools = {
   ethx: '90bfb3c2-5d35-4959-a275-ba5085b08aa3',
   yneth: '44dd4153-aa9f-4616-9a88-e6803c86b995',
   ynethx: 'e3c59895-d6ad-4634-b257-f599f1a1a4a0',
+  sweth: 'ca2acc2d-6246-44aa-ae91-8725b2c62c7c',
   rsweth: 'eff9b43c-a80d-4bfc-9f9e-55e02a8ef619',
   stusr: '0aedb3f6-9298-49de-8bb0-2f611a4df784',
   wstusr: '0aedb3f6-9298-49de-8bb0-2f611a4df784',
@@ -26,6 +27,7 @@ const defiLlamaPools = {
   stusdt: 'e1b9420a-30d4-4c27-8e01-2d6cd240e1b9',
   bsdeth: 'ca775845-b68a-4084-8d8d-29c31970a643',
   hyusd: '8449ce9a-fc8d-4d93-991a-55113fa80a5a',
+  unieth: 'ad383eed-61d8-4378-80bd-a197d9a11c79',
 };
 
 export async function getTokenApr(symbol: string, chainId: number, address: string) {
