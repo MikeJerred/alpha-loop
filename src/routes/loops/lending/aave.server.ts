@@ -10,6 +10,7 @@ import {
 import { getContract } from 'viem';
 import { IUiPoolDataProvider_ABI } from '$lib/abi/AaveUiPoolDataProvider';
 import { getChainId, getViemClient, type ChainName } from '$lib/core/chains';
+import { fetchCached } from '$lib/server/cache';
 import { isCorrelated, type YieldLoop } from '../utils';
 
 const providersMap = {
@@ -20,7 +21,7 @@ const providersMap = {
   zksync: [AaveV3ZkSync],
 } as const;
 
-export async function searchAave(chainsInput: readonly ChainName[]): Promise<YieldLoop[]> {
+export async function searchAave(chainsInput: readonly ChainName[], depeg: number): Promise<YieldLoop[]> {
   const validChains = Object.keys(providersMap) as (keyof typeof providersMap)[];
   const chains = validChains.filter(name => chainsInput.includes(name));
 
@@ -54,10 +55,9 @@ export async function searchAave(chainsInput: readonly ChainName[]): Promise<Yie
             continue;
           }
 
-          // allow for 3% price drop
           let ltv = Math.min(
             Number(supplyAsset.baseLTVasCollateral) / 10000,
-            0.97 * Number(supplyAsset.reserveLiquidationThreshold) / 10000,
+            depeg * Number(supplyAsset.reserveLiquidationThreshold) / 10000,
           );
 
           const validEModes = eModes.filter(eMode =>
@@ -65,7 +65,7 @@ export async function searchAave(chainsInput: readonly ChainName[]): Promise<Yie
             getBit(eMode.eMode.borrowableBitmap, borrowIndex)
           );
           if (validEModes.length > 0) {
-            ltv = Math.max(ltv, ...validEModes.map(eMode => Math.min(eMode.eMode.ltv, 0.97 * eMode.eMode.liquidationThreshold) / 10000))
+            ltv = Math.max(ltv, ...validEModes.map(eMode => Math.min(eMode.eMode.ltv, depeg * eMode.eMode.liquidationThreshold) / 10000))
           }
 
           const chainId = getChainId(chain);
@@ -142,8 +142,10 @@ async function getYieldApr(tokenAddress: `0x${string}`, poolAddressesProvider: `
   }
 
   const timestamp = Math.floor(Date.now() / 1000) - 30*24*60*60;
-  const res = await fetch(`https://aave-api-v2.aave.com/data/rates-history?reserveId=${id}&from=${timestamp}&resolutionInHours=24`);
-  const data = await res.json() as { liquidityRate_avg: number, variableBorrowRate_avg: number }[];
+  const data = await fetchCached<{ liquidityRate_avg: number, variableBorrowRate_avg: number }[]>(
+    `https://aave-api-v2.aave.com/data/rates-history?reserveId=${id}`,
+    `https://aave-api-v2.aave.com/data/rates-history?reserveId=${id}&from=${timestamp}&resolutionInHours=24`,
+  );
   if (!data || data.length === 0) {
     yieldCache.set(id, { timestamp: Date.now() });
     return null;

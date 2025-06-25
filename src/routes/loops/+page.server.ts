@@ -10,6 +10,7 @@ export const load: PageServerLoad = async ({ url }) => {
     'chain',
     ['mainnet', 'arbitrum', 'base', 'linea', 'mantle', 'optimism', 'scroll', 'zksync'],
   );
+  const depeg = toNumber(url.searchParams.get('depeg')) ?? 0.97;
   const exposures = getValidSearchParams(url.searchParams, 'exposure', ['btc', 'eth', 'usd']);
   const minLiquidity = toNumber(url.searchParams.get('liquidity')) ?? 10_000;
   const protocols = getValidSearchParams(
@@ -22,9 +23,9 @@ export const load: PageServerLoad = async ({ url }) => {
 
   const results = await Promise.all(protocols.map(async protocol => {
     switch (protocol) {
-      case 'aave': return await searchAave(chains);
-      case 'compound': return await searchCompound(chains);
-      case 'morpho': return await searchMorpho(chains);
+      case 'aave': return await searchAave(chains, depeg);
+      case 'compound': return await searchCompound(chains, depeg);
+      case 'morpho': return await searchMorpho(chains, depeg);
 
       case 'dolomite':
       case 'euler':
@@ -46,7 +47,7 @@ export const load: PageServerLoad = async ({ url }) => {
       const collateralApr = (1 + item.supplyApr.weekly) * (1 + supplyTokenApr) - 1;
       const borrowTokenApr = await getTokenApr(item.borrowAsset.symbol, item.chainId, item.borrowAsset.address);
       const borrowApr = (1 + item.borrowApr.weekly) * (1 + borrowTokenApr) - 1;
-      const leverage = 1 + item.ltv / (1 - item.ltv);
+      const leverage = 1 / (1 - item.ltv);
 
       return {
         ...item,

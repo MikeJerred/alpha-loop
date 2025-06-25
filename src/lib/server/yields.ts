@@ -1,4 +1,5 @@
 import { apyToApr } from '$lib/core/utils';
+import { fetchCached } from './cache';
 
 const defiLlamaPools = {
   wsteth: '747c1d2a-c668-4682-b9f9-296708a3dd90',
@@ -30,6 +31,30 @@ const defiLlamaPools = {
   unieth: 'ad383eed-61d8-4378-80bd-a197d9a11c79',
 };
 
+type PendleMarketDataResponse = {
+  impliedApy: number,
+  aggregatedApy: number,
+};
+
+type PendleMarketsResponse = {
+  markets: {
+    address: string,
+    pt: string,
+    yt: string,
+    details: {
+      liquidity: number,
+      impliedApy: number,
+    },
+  }[],
+};
+
+type DefiLlamaPoolResponse = {
+  data: {
+    apy: number,
+    apyMean30d: number,
+  }[],
+};
+
 export async function getTokenApr(symbol: string, chainId: number, address: string) {
   symbol = symbol.toLowerCase();
   if (symbol.startsWith('pt-')) {
@@ -40,15 +65,16 @@ export async function getTokenApr(symbol: string, chainId: number, address: stri
     }
   }
   if (symbol.startsWith('lp-')) {
-    const res = await fetch(`https://api-v2.pendle.finance/core/v2/${chainId}/markets/${address}/data`);
-    const { aggregatedApy } = await res.json() as { impliedApy: number, aggregatedApy: number };
+    const { aggregatedApy } = await fetchCached<PendleMarketDataResponse>(
+      `https://api-v2.pendle.finance/core/v2/${chainId}/markets/${address}/data`,
+    );
     return apyToApr(aggregatedApy);
   }
 
   if (isValidDefiLlama(symbol)) {
     const pool = defiLlamaPools[symbol];
-    const res = await fetch(`https://yields.llama.fi/poolsEnriched?pool=${pool}`);
-    const { data } = await res.json() as { data: { apy: number, apyMean30d: number }[] };
+    const { data } = await fetchCached<DefiLlamaPoolResponse>(`https://yields.llama.fi/poolsEnriched?pool=${pool}`);
+
     return apyToApr(data[0].apyMean30d / 100);
   }
 
@@ -56,18 +82,9 @@ export async function getTokenApr(symbol: string, chainId: number, address: stri
 }
 
 async function getPendleMarkets(chainId: number) {
-  const res = await fetch(`https://api-v2.pendle.finance/core/v1/${chainId}/markets/active`);
-  const { markets } = await res.json() as {
-    markets: {
-      address: string,
-      pt: string,
-      yt: string,
-      details: {
-        liquidity: number,
-        impliedApy: number,
-      },
-    }[],
-  };
+  const { markets } = await fetchCached<PendleMarketsResponse>(
+    `https://api-v2.pendle.finance/core/v1/${chainId}/markets/active`,
+  );
   return markets;
 }
 

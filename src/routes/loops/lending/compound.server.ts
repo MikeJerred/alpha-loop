@@ -1,6 +1,7 @@
 import { erc20Abi, getContract } from 'viem';
 import { CompoundCometABI } from '$lib/abi/CompoundComet';
 import { chains, getViemClientFromId, toFilteredChainIds, type ChainId, type ChainName } from '$lib/core/chains';
+import { fetchCached } from '$lib/server/cache';
 import { type YieldLoop } from '../utils';
 
 type Data = {
@@ -24,12 +25,11 @@ const erc20Symbols = new Map<`0x${string}`, string>();
 // from: https://docs.compound.finance/helper-functions/#get-asset-info-by-address
 const compoundCollateralFactorScale = 1000000000000000000n;
 
-export async function searchCompound(chainNames: readonly ChainName[]): Promise<YieldLoop[]> {
+export async function searchCompound(chainNames: readonly ChainName[], depeg: number): Promise<YieldLoop[]> {
   const chainIds = toFilteredChainIds(chainNames, ['mainnet', 'arbitrum', 'base', 'linea', 'mantle', 'optimism', 'polygon', 'scroll']);
 
   const url = 'https://v3-api.compound.finance/market/all-networks/all-contracts/historical/summary';
-  const res = await fetch(url);
-  const data = await res.json() as Data[];
+  const data = await fetchCached<Data[]>(url);
   const filteredData = data.filter(({ chain_id }) => (chainIds as number[]).includes(chain_id));
 
   const tt = await Promise.all(Map.groupBy(filteredData, ({ comet }) => comet.address)
@@ -114,7 +114,7 @@ export async function searchCompound(chainNames: readonly ChainName[]): Promise<
           yearly: 0,
         },
         liquidityUSD,
-        ltv: Math.min(supplyAsset.ltv, supplyAsset.lltv * 0.97), // allow for 3% price drop
+        ltv: Math.min(supplyAsset.ltv, supplyAsset.lltv * depeg),
         link: `https://app.compound.finance/markets/${borrowTokenSymbol}-${getChainForUrl(chainId)}`
       } as YieldLoop));
     }));

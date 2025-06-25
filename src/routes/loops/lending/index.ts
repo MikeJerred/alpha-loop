@@ -1,3 +1,3 @@
-export { searchAave } from './aave';
-export { searchCompound } from './compound';
-export { searchMorpho } from './morpho';
+export { searchAave } from './aave.server';
+export { searchCompound } from './compound.server';
+export { searchMorpho } from './morpho.server';

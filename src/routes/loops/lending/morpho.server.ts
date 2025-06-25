@@ -1,4 +1,5 @@
 import { chains, toFilteredChainIds, type ChainId, type ChainName } from '$lib/core/chains';
+import { fetchCached } from '$lib/server/cache';
 import { apyToApr } from '$lib/core/utils';
 import { type YieldLoop } from '../utils';
 
@@ -34,12 +35,11 @@ type Results = {
         limit: number,
         skip: number,
       },
-    }
-  }
+    },
+  },
 };
 
-export async function searchMorpho(chains: readonly ChainName[]): Promise<YieldLoop[]> {
-  const url = 'https://blue-api.morpho.org/graphql';
+export async function searchMorpho(chains: readonly ChainName[], depeg: number): Promise<YieldLoop[]> {
   const query = `query ($where: MarketFilters) {
     markets(first: 1000, where: $where) {
       items {
@@ -82,23 +82,22 @@ export async function searchMorpho(chains: readonly ChainName[]): Promise<YieldL
 
   const variables = {
     where: {
-      chainId_in: chainIds
-    }
+      chainId_in: chainIds,
+    },
   };
 
-  const res = await fetch(url, {
-    headers: {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json',
+  const results = await fetchCached<Results>(
+    `https://blue-api.morpho.org/graphql?chainIds=${JSON.stringify(chainIds)}`,
+    'https://blue-api.morpho.org/graphql',
+    {
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+      method: 'POST',
+      body: JSON.stringify({ query, variables }),
     },
-    method: 'POST',
-    body: JSON.stringify({
-      query,
-      variables
-    })
-  });
-
-  const results = await res.json() as Results;
+  );
 
   return results.data.markets.items
     .filter(item => item.collateralAsset && item.loanAsset && item.lltv && item.morphoBlue?.chain && item.state)
@@ -128,8 +127,8 @@ export async function searchMorpho(chains: readonly ChainName[]): Promise<YieldL
       liquidityUSD: typeof item.state.liquidityAssetsUsd === 'string'
         ? Number(BigInt(item.state.liquidityAssetsUsd) / 10n**18n)
         : item.state.liquidityAssetsUsd,
-      ltv: 0.97 * Number(BigInt(item.lltv) / 10n**10n) / 10**8, // allow for 3% price drop
-      link: `https://app.morpho.org/${getChainForUrl(item.morphoBlue.chain.id)}/market/${item.uniqueKey}`
+      ltv: depeg * Number(BigInt(item.lltv) / 10n**10n) / 10**8,
+      link: `https://app.morpho.org/${getChainForUrl(item.morphoBlue.chain.id)}/market/${item.uniqueKey}`,
     }));
 }
 
