@@ -7,18 +7,21 @@ import {
   AaveV3Scroll,
   AaveV3ZkSync,
 } from '@bgd-labs/aave-address-book';
-import { getContract } from 'viem';
 import { IUiPoolDataProvider_ABI } from '$lib/abi/AaveUiPoolDataProvider';
-import { getChainId, getViemClient, type ChainName } from '$lib/core/chains';
-import { fetchCached } from '$lib/server/cache';
+import { getChainId, type ChainName } from '$lib/core/chains';
+import { fetchCached, readContractCached } from '$lib/server/cache';
 import { isCorrelated, type YieldLoop } from '../utils';
 
 const providersMap = {
-  mainnet: [AaveV3Ethereum, AaveV3EthereumEtherFi, AaveV3EthereumLido],
-  arbitrum: [AaveV3Arbitrum],
-  base: [AaveV3Base],
-  scroll: [AaveV3Scroll],
-  zksync: [AaveV3ZkSync],
+  mainnet: [
+    ['mainnet', AaveV3Ethereum],
+    ['etherfi', AaveV3EthereumEtherFi],
+    ['lido', AaveV3EthereumLido],
+  ],
+  arbitrum: [['arbitrum', AaveV3Arbitrum]],
+  base: [['base', AaveV3Base]],
+  scroll: [['scroll', AaveV3Scroll]],
+  zksync: [['zksync', AaveV3ZkSync]],
 } as const;
 
 export async function searchAave(chainsInput: readonly ChainName[], depeg: number): Promise<YieldLoop[]> {
@@ -28,17 +31,22 @@ export async function searchAave(chainsInput: readonly ChainName[], depeg: numbe
   const results: YieldLoop[] = [];
 
   for (const chain of chains) {
-    const client = getViemClient(chain);
+    for (const [providerKey, provider] of providersMap[chain]) {
+      const [reserves, referenceCurrency] = await readContractCached(
+        chain,
+        provider.UI_POOL_DATA_PROVIDER,
+        IUiPoolDataProvider_ABI,
+        'getReservesData',
+        [provider.POOL_ADDRESSES_PROVIDER],
+      );
 
-    for (const provider of providersMap[chain]) {
-      const uiPoolDataProvider = getContract({
-        address: provider.UI_POOL_DATA_PROVIDER,
-        abi: IUiPoolDataProvider_ABI,
-        client,
-      });
-
-      const [reserves, referenceCurrency] = await uiPoolDataProvider.read.getReservesData([provider.POOL_ADDRESSES_PROVIDER]);
-      const eModes = await uiPoolDataProvider.read.getEModes([provider.POOL_ADDRESSES_PROVIDER]);
+      const eModes = await readContractCached(
+        chain,
+        provider.UI_POOL_DATA_PROVIDER,
+        IUiPoolDataProvider_ABI,
+        'getEModes',
+        [provider.POOL_ADDRESSES_PROVIDER],
+      );
 
       for (const [supplyIndex, supplyAsset] of reserves.entries()) {
         if (!supplyAsset.symbol || !supplyAsset.isActive || supplyAsset.isFrozen || supplyAsset.isPaused) continue;
@@ -102,7 +110,7 @@ export async function searchAave(chainsInput: readonly ChainName[], depeg: numbe
               borrowAsset.availableLiquidity / (10n ** borrowAsset.decimals)
             ),
             ltv,
-            link: `https://app.aave.com/reserve-overview/?underlyingAsset=${borrowAsset.underlyingAsset}`,
+            link: `https://app.aave.com/reserve-overview/?underlyingAsset=${borrowAsset.underlyingAsset.toLowerCase()}&marketName=proto_${providerKey}_v3`,
           });
         }
       }

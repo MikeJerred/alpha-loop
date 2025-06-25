@@ -50,7 +50,7 @@ export type ChainName = keyof typeof chains;
 export type ChainId = typeof chains[keyof typeof chains]['id'];
 
 export const getChainId = <T extends keyof typeof chains>(name: T): typeof chains[T]['id'] => chains[name].id;
-export const getChainName = <T extends ChainId>(id: T) => Object.entries(chains).find(([, chain]) => chain.id === id)?.[0];
+export const getChainName = <T extends ChainId>(id: T) => Object.entries(chains).find(([, chain]) => chain.id === id)?.[0] as ChainName;
 
 export const getViemClient = <T extends keyof typeof chains>(name: T) => clients[name];
 

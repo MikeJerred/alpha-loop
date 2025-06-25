@@ -1,7 +1,7 @@
-import { erc20Abi, getContract } from 'viem';
+import { erc20Abi } from 'viem';
 import { CompoundCometABI } from '$lib/abi/CompoundComet';
-import { chains, getViemClientFromId, toFilteredChainIds, type ChainId, type ChainName } from '$lib/core/chains';
-import { fetchCached } from '$lib/server/cache';
+import { chains, getChainName, toFilteredChainIds, type ChainId, type ChainName } from '$lib/core/chains';
+import { fetchCached, readContractCached } from '$lib/server/cache';
 import { type YieldLoop } from '../utils';
 
 type Data = {
@@ -36,6 +36,7 @@ export async function searchCompound(chainNames: readonly ChainName[], depeg: nu
     .entries()
     .map(async ([cometAddress, items]) => {
       const chainId = items[0].chain_id as ChainId;
+      const chainName = getChainName(chainId);
 
       items.sort((a, b) => a.timestamp - b.timestamp);
       const dailyApr = Number(items[0].borrow_apr);
@@ -50,38 +51,21 @@ export async function searchCompound(chainNames: readonly ChainName[], depeg: nu
         : items.reduce((total, item) => total + Number(item.borrow_apr), 0) / items.length;
       const liquidityUSD = (Number(items[0].total_supply_value) - Number(items[0].total_borrow_value)) * Number(items[0].base_usd_price);
 
-      const client = getViemClientFromId(chainId);
-      const comet = getContract({
-        address: cometAddress,
-        abi: CompoundCometABI,
-        client,
-      });
-
-      const borrowTokenAddress = await comet.read.baseToken();
+      const borrowTokenAddress = await readContractCached(chainName, cometAddress, CompoundCometABI, 'baseToken');
       let borrowTokenSymbol = erc20Symbols.get(borrowTokenAddress);
       if (!borrowTokenSymbol) {
-        const borrowToken = getContract({
-          address: borrowTokenAddress,
-          abi: erc20Abi,
-          client,
-        });
-        borrowTokenSymbol = await borrowToken.read.symbol();
+        borrowTokenSymbol = await readContractCached(chainName, borrowTokenAddress, erc20Abi, 'symbol');
         erc20Symbols.set(borrowTokenAddress, borrowTokenSymbol);
       }
 
-      const assetCount = await comet.read.numAssets();
+      const assetCount = await readContractCached(chainName, cometAddress, CompoundCometABI, 'numAssets');
       const supplyAssets = await Promise.all(new Array(assetCount).keys().map(async i => {
-        const assetInfo = await comet.read.getAssetInfo([i]);
+        const assetInfo = await readContractCached(chainName, cometAddress, CompoundCometABI, 'getAssetInfo', [i]);
 
         const supplyTokenAddress = assetInfo.asset;
         let supplyTokenSymbol = erc20Symbols.get(supplyTokenAddress);
         if (!supplyTokenSymbol) {
-          const supplyToken = getContract({
-            address: supplyTokenAddress,
-            abi: erc20Abi,
-            client,
-          });
-          supplyTokenSymbol = await supplyToken.read.symbol();
+          supplyTokenSymbol = await readContractCached(chainName, supplyTokenAddress, erc20Abi, 'symbol');
           erc20Symbols.set(supplyTokenAddress, supplyTokenSymbol);
         }
 
