@@ -12,7 +12,7 @@
   import scrollIcon from '$lib/images/chains/scroll.svg';
   import zksyncIcon from '$lib/images/chains/zksync.svg';
 
-  let { id, size = 16 }: { id: ChainId, size?: number } = $props();
+  let { id, size = 16, title = true }: { id: ChainId, size?: number, title?: boolean } = $props();
 
   const image = $derived(
     id === chains.arbitrum.id ? arbitrumIcon
@@ -28,6 +28,8 @@
     : id === chains.zksync.id ? zksyncIcon
     : null
   );
+
+  const titleText = $derived(Object.values(chains).find(chain => chain.id === id)?.name);
 </script>
 
 <style>
@@ -38,4 +40,4 @@
   }
 </style>
 
-<img src={image} alt={getChainName(id)} width={`${size}px`} height={`${size}px`} />
+<img src={image} title={title ? titleText : null} alt={titleText} width={`${size}px`} height={`${size}px`} />

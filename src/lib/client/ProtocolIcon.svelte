@@ -1,10 +1,10 @@
 <script lang="ts">
-  import type { Protocol } from '$lib/core/protocols';
+  import { type Protocol, protocols } from '$lib/core/protocols';
   import aaveIcon from '$lib/images/protocols/aave-dark.svg';
   import compoundIcon from '$lib/images/protocols/compound.svg';
   import morphoIcon from '$lib/images/protocols/morpho-light.svg';
 
-  let { id, size = 16 }: { id: Protocol, size?: number } = $props();
+  let { id, size = 16, title = true }: { id: Protocol, size?: number, title?: boolean } = $props();
 
   const image = $derived(
     id === 'aave' ? aaveIcon
@@ -12,12 +12,7 @@
     : id === 'morpho' ? morphoIcon
     : null
   );
-  const title = $derived(
-    id === 'aave' ? 'Aave'
-    : id === 'compound' ? 'Compound'
-    : id === 'morpho' ? 'Morpho'
-    : null
-  );
+  const titleText = $derived(protocols[id].name);
 </script>
 
 <style>
@@ -28,4 +23,4 @@
   }
 </style>
 
-<img src={image} title={title} alt={title} width={`${size}px`} height={`${size}px`} />
+<img src={image} title={title ? titleText : null} alt={titleText} width={`${size}px`} height={`${size}px`} />

@@ -25,54 +25,32 @@
     goto(`?${params.toString()}`, { noScroll: true });
   });
 
-  const chainItems = Object.entries(chains).map(([urlName, { id, name }]) => ({ id, name, urlName: urlName as ChainName }));
+  const chainItems = Object.entries(chains)
+    .map(([urlName, { id, name }]) => ({ id, name, urlName: urlName as ChainName }))
+    .sort((a, b) => a.id - b.id);
   const exposureItems = Object.entries(exposures).map(([urlName, { name }]) => ({ name, urlName: urlName as Exposure }));
   const protocolItems = Object.entries(protocols).map(([urlName, { name }]) => ({ name, urlName: urlName as Protocol }));
 </script>
 
 <style>
-  form {
-    margin-bottom: 40px;
-
-    label {
-      width: fit-content;
-    }
-  }
-
   .grid {
-    display: grid;
-    grid-template-columns: repeat(13, auto);
-  }
-
-  .item {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    line-height: 32px;
-  }
-
-  .header {
-    display: contents;
-
     .item {
-      font-weight: 700;
-      border-bottom: 1px solid var(--color-text);
+      line-height: 32px;
     }
-  }
 
-  .row {
-    display: contents;
-    color: var(--color-text);
-
-    &:nth-child(even) {
+    .header {
       .item {
-        background: rgba(255, 255, 255, 0.05);
+        border-bottom: 1px solid var(--color-stone-500);
       }
     }
-  }
 
-  .yield {
-    font-weight: 700;
+    .row {
+      &:nth-child(even) {
+        .item {
+          background: rgba(255, 255, 255, 0.05);
+        }
+      }
+    }
   }
 </style>
 
@@ -81,8 +59,41 @@
   <meta name="description" content="Find yield loop strategies" />
 </svelte:head>
 
-<form class="flex flex-wrap items-center justify-between gap-6">
-  <label class="label flex-auto">
+<form class="mb-6 flex flex-wrap gap-4 items-center justify-between">
+  <label class="label flex-auto w-fit">
+    <span class="label-text">Protocol</span>
+    <div class="flex gap-2 items-center">
+      {#each protocolItems as protocol}
+        <Toggle urlKey="protocol" urlName={protocol.urlName} allItems={protocolItems}>
+          <ProtocolIcon id={protocol.urlName} title={false} />
+        </Toggle>
+      {/each}
+    </div>
+  </label>
+
+  <label class="label flex-auto w-fit">
+    <span class="label-text">Chains</span>
+    <div class="flex flex-wrap gap-2 items-center">
+      {#each chainItems as chain}
+        <Toggle urlKey="chain" urlName={chain.urlName} allItems={chainItems}>
+          <ChainIcon id={chain.id} title={false} />
+        </Toggle>
+      {/each}
+    </div>
+  </label>
+
+  <label class="label flex-auto w-fit">
+    <span class="label-text">Exposure</span>
+    <div class="flex gap-2 items-center">
+      {#each exposureItems as exposure}
+        <Toggle urlKey="exposure" urlName={exposure.urlName} allItems={exposureItems}>
+          <ExposureIcon id={exposure.urlName} title={false} />
+        </Toggle>
+      {/each}
+    </div>
+  </label>
+
+  <label class="label flex-auto w-fit">
     <span class="label-text">Min. Liquidity</span>
     <div class="input-group grid-cols-[auto_1fr_auto]">
       <div class="ig-cell preset-tonal">
@@ -96,72 +107,48 @@
       />
     </div>
   </label>
-
-  <label class="label flex-auto">
-    <span class="label-text">Chains</span>
-    <div class="flex gap-2 items-center">
-      {#each chainItems as chain}
-        <Toggle urlKey="chain" urlName={chain.urlName} allItems={chainItems}>
-          <ChainIcon id={chain.id} />
-        </Toggle>
-      {/each}
-    </div>
-  </label>
-
-  <label class="label flex-auto">
-    <span class="label-text">Protocol</span>
-    <div class="flex gap-2 items-center">
-      {#each protocolItems as protocol}
-        <Toggle urlKey="protocol" urlName={protocol.urlName} allItems={protocolItems}>
-          <ProtocolIcon id={protocol.urlName} />
-        </Toggle>
-      {/each}
-    </div>
-  </label>
-
-  <label class="label flex-auto">
-    <span class="label-text">Exposure</span>
-    <div class="flex gap-2 items-center">
-      {#each exposureItems as exposure}
-        <Toggle urlKey="exposure" urlName={exposure.urlName} allItems={exposureItems}>
-          <ExposureIcon id={exposure.urlName} />
-        </Toggle>
-      {/each}
-    </div>
-  </label>
 </form>
 
-<div class="grid">
-  <div class="header">
-    <div class="item"><!--Chain--></div>
-    <div class="item"><!--Protocol--></div>
-    <div class="item">Strategy</div>
-    <div class="item">Liquidity</div>
-    <div class="item">Yield</div>
-    <div class="item"> = </div>
-    <div class="item">Leverage</div>
-    <div class="item"> * </div>
-    <div class="item">(Supply</div>
-    <div class="item"> - </div>
-    <div class="item">Borrow</div>
-    <div class="item"> * </div>
-    <div class="item">LTV)</div>
+<div class="
+    grid
+    grid-cols-[max-content_max-content_minmax(0,max-content)_auto_auto]
+    md:grid-cols-[max-content_max-content_minmax(0,max-content)_auto_auto_max-content_auto_max-content_auto_max-content_auto_max-content_auto]
+  "
+>
+  <div class="header contents font-bold">
+    <div class="item flex items-center justify-center"><!-- Chain --></div>
+    <div class="item flex items-center justify-center"><!-- Protocol --></div>
+    <div class="item flex pr-4">Strategy</div>
+    <div class="item flex pr-4">Liquidity</div>
+    <div class="item flex">Yield</div>
+    <div class="item hidden md:flex px-2"> = </div>
+    <div class="item hidden md:flex justify-center">Leverage</div>
+    <div class="item hidden md:flex px-2"> * </div>
+    <div class="item hidden md:flex justify-center">(Supply</div>
+    <div class="item hidden md:flex px-2"> - </div>
+    <div class="item hidden md:flex justify-center">Borrow</div>
+    <div class="item hidden md:flex px-2"> * </div>
+    <div class="item hidden md:flex justify-center">LTV)</div>
   </div>
   {#each data.loops as loop}
-    <a class="row" href={loop.link} target="_blank">
-      <div class="item"><ChainIcon id={loop.chainId} /></div>
-      <div class="item"><ProtocolIcon id={loop.protocol} /></div>
-      <div class="item">{loop.supplyAsset.symbol} / {loop.borrowAsset.symbol}</div>
-      <div class="item"><Currency value={loop.liquidityUSD} symbol="$" /></div>
-      <div class="item yield"><Percent value={loop.yieldApr} digits={1} /></div>
-      <div class="item"></div>
-      <div class="item">{loop.leverage.toFixed(1)}</div>
-      <div class="item"></div>
-      <div class="item"><Percent value={loop.collateralApr} /></div>
-      <div class="item"></div>
-      <div class="item"><Percent value={loop.borrowApr} /></div>
-      <div class="item"></div>
-      <div class="item"><Percent value={loop.ltv} /></div>
+    <a class="row contents" href={loop.link} target="_blank">
+      <div class="item flex pl-4 pr-2 items-center justify-center"><ChainIcon id={loop.chainId} /></div>
+      <div class="item flex pl-2 pr-4 items-center justify-center"><ProtocolIcon id={loop.protocol} /></div>
+      <div class="item flex pr-4">
+        <span class="truncate">
+          {loop.supplyAsset.symbol} / {loop.borrowAsset.symbol}
+        </span>
+      </div>
+      <div class="item flex pr-4"><Currency value={loop.liquidityUSD} symbol="$" /></div>
+      <div class="item flex yield font-bold"><Percent value={loop.yieldApr} digits={1} /></div>
+      <div class="item hidden md:flex"></div>
+      <div class="item hidden md:flex justify-center">{loop.leverage.toFixed(1)}</div>
+      <div class="item hidden md:flex"></div>
+      <div class="item hidden md:flex justify-center"><Percent value={loop.collateralApr} /></div>
+      <div class="item hidden md:flex"></div>
+      <div class="item hidden md:flex justify-center"><Percent value={loop.borrowApr} /></div>
+      <div class="item hidden md:flex"></div>
+      <div class="item hidden md:flex justify-center"><Percent value={loop.ltv} /></div>
     </a>
   {/each}
 </div>

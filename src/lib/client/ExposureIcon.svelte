@@ -4,7 +4,7 @@
   import ethIcon from '$lib/images/exposures/eth.svg';
   import usdIcon from '$lib/images/exposures/usdc.svg';
 
-  let { id, size = 16 }: { id: Exposure, size?: number } = $props();
+  let { id, size = 16, title = true }: { id: Exposure, size?: number, title?: boolean } = $props();
 
   const image = $derived(
     id === 'btc' ? btcIcon
@@ -12,7 +12,7 @@
     : id === 'usd' ? usdIcon
     : null
   );
-  const title = $derived(
+  const titleText = $derived(
     id === 'btc' ? 'BTC'
     : id === 'eth' ? 'ETH'
     : id === 'usd' ? 'USD'
@@ -28,4 +28,4 @@
   }
 </style>
 
-<img src={image} title={title} alt={title} width={`${size}px`} height={`${size}px`} />
+<img src={image} title={title ? titleText : null} alt={titleText} width={`${size}px`} height={`${size}px`} />
