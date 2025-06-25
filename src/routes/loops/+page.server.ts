@@ -5,26 +5,18 @@ import { isCorrelated } from './utils';
 
 export const load: PageServerLoad = async ({ url }) => {
   // const bribes = url.searchParams.getAll('bribe'); // count bribe emissions in the apy
-  const validChains = ['mainnet', 'zksync', 'mantle', 'base', 'arbitrum', 'berachain'] as const;
-  const chainsParam = url.searchParams.getAll('chain');
-  const chains = chainsParam.length > 0
-    ? validChains.filter(chain => chainsParam.includes(chain))
-    : validChains;
-
-  const validExposures = ['btc', 'eth', 'usd'] as const;
-  const exposuresParam = url.searchParams.getAll('exposure');
-  const exposures = exposuresParam.length > 0
-    ? validExposures.filter(e => exposuresParam.includes(e))
-    : validExposures;
-
+  const chains = getValidSearchParams(
+    url.searchParams,
+    'chain',
+    ['mainnet', 'arbitrum', 'base', 'linea', 'mantle', 'optimism', 'scroll', 'zksync'],
+  );
+  const exposures = getValidSearchParams(url.searchParams, 'exposure', ['btc', 'eth', 'usd']);
   const minLiquidity = toNumber(url.searchParams.get('liquidity')) ?? 10_000;
-
-  const validProtocols = ['aave', 'compound', 'dolomite', 'euler', 'morpho', 'spark', 'zerolend'] as const;
-  const protocolsParam = url.searchParams.getAll('protocol');
-  const protocols = protocolsParam.length > 0
-    ? validProtocols.filter(protocol => protocolsParam.includes(protocol))
-    : validProtocols
-
+  const protocols = getValidSearchParams(
+    url.searchParams,
+    'protocol',
+    ['aave', 'compound', 'dolomite', 'euler', 'morpho', 'spark', 'zerolend'],
+  );
   const sortOrder = url.searchParams.get('sort') ?? 'yield';
   // const page = Number(url.searchParams.get('page') ?? '1');
 
@@ -81,6 +73,13 @@ export const load: PageServerLoad = async ({ url }) => {
     loops
   };
 };
+
+function getValidSearchParams<T extends string>(searchParams: URLSearchParams, key: string, validValues: T[]) {
+  const params = searchParams.getAll(key);
+  return params.length > 0
+    ? validValues.filter(value => params.includes(value))
+    : validValues;
+}
 
 function toNumber(value: string | null) {
   if (value === null) return null;

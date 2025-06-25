@@ -25,7 +25,7 @@ const erc20Symbols = new Map<`0x${string}`, string>();
 const compoundCollateralFactorScale = 1000000000000000000n;
 
 export async function searchCompound(chainNames: readonly ChainName[]): Promise<YieldLoop[]> {
-  const chainIds = toFilteredChainIds(chainNames, ['mainnet', 'base', 'arbitrum', 'optimism', 'polygon', 'linea', 'mantle', 'scroll']);
+  const chainIds = toFilteredChainIds(chainNames, ['mainnet', 'arbitrum', 'base', 'linea', 'mantle', 'optimism', 'polygon', 'scroll']);
 
   const url = 'https://v3-api.compound.finance/market/all-networks/all-contracts/historical/summary';
   const res = await fetch(url);

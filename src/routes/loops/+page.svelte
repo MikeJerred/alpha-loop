@@ -35,7 +35,7 @@
 <style>
   .grid {
     .item {
-      line-height: 32px;
+      line-height: 38px;
     }
 
     .header {
