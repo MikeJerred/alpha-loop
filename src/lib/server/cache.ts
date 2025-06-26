@@ -33,7 +33,7 @@ export const fetchCached = async <T>(
       }
     }
 
-    const kvCached = JSON.parse(await kv?.get(`fetch:${cacheKey}`) ?? 'null') as { timestamp: number, data: T } | null;
+    const kvCached = parseJson<{ timestamp: number, data: T }>(await kv?.get(`fetch:${cacheKey}`));
     if (kvCached) {
       const delta = Date.now() - kvCached.timestamp;
       if (delta < CacheExpiry) {
@@ -49,7 +49,8 @@ export const fetchCached = async <T>(
   const toCache = { timestamp: Date.now(), data };
 
   fetchCache.set(cacheKey, toCache);
-  kv?.put(`fetch:${cacheKey}`, JSON.stringify(toCache)); // don't await this to return results faster
+  // don't await this to return results faster
+  kv?.put(`fetch:${cacheKey}`, stringifyJson(toCache), { expirationTtl: CacheExpiry / 1000 });
 
   return data;
 };
@@ -84,10 +85,9 @@ export const readContractCached = async <
       }
     }
 
-    const kvCached = JSON.parse(await kv?.get(`contract:${cacheKey}`) ?? 'null') as {
-      timestamp: number,
-      data: ContractReturn<abi, functionName>,
-    } | null;
+    const kvCached = parseJson<{ timestamp: number, data: ContractReturn<abi, functionName> }>(
+      await kv?.get(`contract:${cacheKey}`)
+    );
     if (kvCached) {
       const delta = Date.now() - kvCached.timestamp;
       if (delta < CacheExpiry) {
@@ -103,7 +103,40 @@ export const readContractCached = async <
   const toCache = { timestamp: Date.now(), data };
 
   contractCache.set(cacheKey, toCache);
-  kv?.put(`contract:${cacheKey}`, JSON.stringify(toCache)); // don't await this to return results faster
+  // don't await this to return results faster
+  kv?.put(`contract:${cacheKey}`, stringifyJson(toCache), { expirationTtl: CacheExpiry / 1000 });
 
   return data;
 };
+
+function parseJson<T>(data: string | null | undefined): T | null {
+  if (!data) return null;
+
+  return JSON.parse(data, (key, value) => {
+    if (typeof value !== 'string' || !/^-?\d+n+$/.test(value)) {
+      // if this does not look like an escaped sequence, do nothing
+      return value;
+    }
+
+    if (/^-?\d+n$/.test(value)) {
+      // if we have a single 'n' at the end, then this is an escaped bigint
+      return BigInt(value.slice(0, -1));
+    }
+
+    // otherwise it was originally a string which we escaped with an extra 'n'
+    return value.slice(0, -1);
+  });
+}
+
+function stringifyJson(data: unknown) {
+  return JSON.stringify(data, (key, value) => {
+    if (typeof value === 'bigint') return `${value.toString()}n`;
+
+    if (typeof value === 'string' && /^-?\d+n+$/.test(value)) {
+      // escape strings that happen to match the escaped bigint format with an extra 'n'
+      return `${value}n`;
+    }
+
+    return value;
+  });
+}
