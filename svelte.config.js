@@ -3,11 +3,7 @@ import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 
 const config = {
   preprocess: vitePreprocess(),
-  kit: {
-    adapter: adapter({
-      fallback: 'plaintext',
-    })
-  }
+  kit: { adapter: adapter() },
 };
 
 export default config;
