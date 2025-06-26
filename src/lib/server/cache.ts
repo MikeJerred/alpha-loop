@@ -7,9 +7,14 @@ const contractCache = new Map<string, { timestamp: number, data: unknown }>();
 const OneHour = 60 * 60 * 1000;
 const CacheExpiry = 24 * OneHour;
 
-export const fetchCached = async <T>(cacheKey: string, url?: string | URL, init?: RequestInit) => {
+export const fetchCached = async <T>(
+  force: boolean,
+  cacheKey: string,
+  url?: string | URL,
+  init?: RequestInit,
+) => {
   const cached = fetchCache.get(cacheKey);
-  if (cached) {
+  if (cached && !force) {
     const delta = Date.now() - cached.timestamp;
     if (delta < CacheExpiry) {
       return cached.data as T;
@@ -28,6 +33,7 @@ export const readContractCached = async <
   const abi extends Abi,
   functionName extends ContractFunctionName<abi, 'pure' | 'view'>,
 >(
+  force: boolean,
   chain: ChainName,
   address: `0x${string}`,
   abi: abi,
@@ -41,7 +47,7 @@ export const readContractCached = async <
   ContractFunctionArgs<abi, 'pure' | 'view', functionName>
 >>> => {
   const cached = contractCache.get(cacheKey);
-  if (cached) {
+  if (cached && !force) {
     const delta = Date.now() - cached.timestamp;
     if (delta < CacheExpiry) {
       return cached.data as Awaited<ContractFunctionReturnType<

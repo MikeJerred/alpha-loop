@@ -39,7 +39,7 @@ type Results = {
   },
 };
 
-export async function searchMorpho(chains: readonly ChainName[], depeg: number): Promise<YieldLoop[]> {
+export async function searchMorpho(chains: readonly ChainName[], depeg: number, force: boolean): Promise<YieldLoop[]> {
   const query = `query ($where: MarketFilters) {
     markets(first: 1000, where: $where) {
       items {
@@ -87,6 +87,7 @@ export async function searchMorpho(chains: readonly ChainName[], depeg: number):
   };
 
   const results = await fetchCached<Results>(
+    force,
     `https://blue-api.morpho.org/graphql?chainIds=${JSON.stringify(chainIds)}`,
     'https://blue-api.morpho.org/graphql',
     {

@@ -55,10 +55,10 @@ type DefiLlamaPoolResponse = {
   }[],
 };
 
-export async function getTokenApr(symbol: string, chainId: number, address: string) {
+export async function getTokenApr(symbol: string, chainId: number, address: string, force: boolean) {
   symbol = symbol.toLowerCase();
   if (symbol.startsWith('pt-')) {
-    const markets = await getPendleMarkets(chainId);
+    const markets = await getPendleMarkets(chainId, force);
     const market = markets.find(({ pt }) => pt.toLowerCase() === `${chainId}-${address}`.toLowerCase());
     if (market) {
       return apyToApr(market.details.impliedApy);
@@ -66,6 +66,7 @@ export async function getTokenApr(symbol: string, chainId: number, address: stri
   }
   if (symbol.startsWith('lp-')) {
     const { aggregatedApy } = await fetchCached<PendleMarketDataResponse>(
+      force,
       `https://api-v2.pendle.finance/core/v2/${chainId}/markets/${address}/data`,
     );
     return apyToApr(aggregatedApy);
@@ -73,7 +74,7 @@ export async function getTokenApr(symbol: string, chainId: number, address: stri
 
   if (isValidDefiLlama(symbol)) {
     const pool = defiLlamaPools[symbol];
-    const { data } = await fetchCached<DefiLlamaPoolResponse>(`https://yields.llama.fi/poolsEnriched?pool=${pool}`);
+    const { data } = await fetchCached<DefiLlamaPoolResponse>(force, `https://yields.llama.fi/poolsEnriched?pool=${pool}`);
 
     return apyToApr(data[0].apyMean30d / 100);
   }
@@ -81,8 +82,9 @@ export async function getTokenApr(symbol: string, chainId: number, address: stri
   return 0;
 }
 
-async function getPendleMarkets(chainId: number) {
+async function getPendleMarkets(chainId: number, force: boolean) {
   const { markets } = await fetchCached<PendleMarketsResponse>(
+    force,
     `https://api-v2.pendle.finance/core/v1/${chainId}/markets/active`,
   );
   return markets;
