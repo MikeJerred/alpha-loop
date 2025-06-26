@@ -24,7 +24,7 @@ const providersMap = {
   zksync: [['zksync', AaveV3ZkSync]],
 } as const;
 
-export async function searchAave(chainsInput: readonly ChainName[], depeg: number, force: boolean): Promise<YieldLoop[]> {
+export async function searchAave(chainsInput: readonly ChainName[], depeg: number): Promise<YieldLoop[]> {
   const validChains = Object.keys(providersMap) as (keyof typeof providersMap)[];
   const chains = validChains.filter(name => chainsInput.includes(name));
 
@@ -33,7 +33,6 @@ export async function searchAave(chainsInput: readonly ChainName[], depeg: numbe
   for (const chain of chains) {
     for (const [providerKey, provider] of providersMap[chain]) {
       const [reserves, referenceCurrency] = await readContractCached(
-        force,
         chain,
         provider.UI_POOL_DATA_PROVIDER,
         IUiPoolDataProvider_ABI,
@@ -42,7 +41,6 @@ export async function searchAave(chainsInput: readonly ChainName[], depeg: numbe
       );
 
       const eModes = await readContractCached(
-        force,
         chain,
         provider.UI_POOL_DATA_PROVIDER,
         IUiPoolDataProvider_ABI,
@@ -83,13 +81,11 @@ export async function searchAave(chainsInput: readonly ChainName[], depeg: numbe
             supplyAsset.underlyingAsset,
             provider.POOL_ADDRESSES_PROVIDER,
             chainId,
-            force,
           ))?.supply;
           const borrowAPRs = (await getYieldApr(
             borrowAsset.underlyingAsset,
             provider.POOL_ADDRESSES_PROVIDER,
             chainId,
-            force,
           ))?.borrow;
 
           if (!borrowAPRs) continue;
@@ -155,7 +151,6 @@ async function getYieldApr(
   tokenAddress: `0x${string}`,
   poolAddressesProvider: `0x${string}`,
   chainId: number,
-  force: boolean,
 ) {
   const id = `${tokenAddress}${poolAddressesProvider}${chainId}`;
 
@@ -168,7 +163,6 @@ async function getYieldApr(
 
   const timestamp = Math.floor(Date.now() / 1000) - 30*24*60*60;
   const data = await fetchCached<{ liquidityRate_avg: number, variableBorrowRate_avg: number }[]>(
-    force,
     `https://aave-api-v2.aave.com/data/rates-history?reserveId=${id}`,
     `https://aave-api-v2.aave.com/data/rates-history?reserveId=${id}&from=${timestamp}&resolutionInHours=24`,
   );

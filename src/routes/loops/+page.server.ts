@@ -1,10 +1,11 @@
 import { FORCE_PASSWORD } from '$env/static/private';
+import { setupCache } from '$lib/server/cache';
 import { getTokenApr } from '$lib/server/yields';
 import type { PageServerLoad } from './$types';
 import { searchAave, searchCompound, searchMorpho } from './lending';
 import { isCorrelated } from './utils';
 
-export const load: PageServerLoad = async ({ url }) => {
+export const load: PageServerLoad = async ({ platform, url }) => {
   // const bribes = url.searchParams.getAll('bribe'); // count bribe emissions in the apy
   const chains = getValidSearchParams(
     url.searchParams,
@@ -23,11 +24,13 @@ export const load: PageServerLoad = async ({ url }) => {
   const sortOrder = url.searchParams.get('sort') ?? 'yield';
   // const page = Number(url.searchParams.get('page') ?? '1');
 
+  setupCache(force, platform?.env?.EXTERNAL_API_CACHE);
+
   const results = await Promise.all(protocols.map(async protocol => {
     switch (protocol) {
-      case 'aave': return await searchAave(chains, depeg, force);
-      case 'compound': return await searchCompound(chains, depeg, force);
-      case 'morpho': return await searchMorpho(chains, depeg, force);
+      case 'aave': return await searchAave(chains, depeg);
+      case 'compound': return await searchCompound(chains, depeg);
+      case 'morpho': return await searchMorpho(chains, depeg);
 
       case 'dolomite':
       case 'euler':
@@ -45,9 +48,9 @@ export const load: PageServerLoad = async ({ url }) => {
     ))
     .filter(item => item.liquidityUSD >= minLiquidity)
     .map(async item => {
-      const supplyTokenApr = await getTokenApr(item.supplyAsset.symbol, item.chainId, item.supplyAsset.address, force);
+      const supplyTokenApr = await getTokenApr(item.supplyAsset.symbol, item.chainId, item.supplyAsset.address);
       const collateralApr = (1 + item.supplyApr.weekly) * (1 + supplyTokenApr) - 1;
-      const borrowTokenApr = await getTokenApr(item.borrowAsset.symbol, item.chainId, item.borrowAsset.address, force);
+      const borrowTokenApr = await getTokenApr(item.borrowAsset.symbol, item.chainId, item.borrowAsset.address);
       const borrowApr = (1 + item.borrowApr.weekly) * (1 + borrowTokenApr) - 1;
       const leverage = 1 / (1 - item.ltv);
 
