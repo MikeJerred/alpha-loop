@@ -3,32 +3,34 @@ import { fetchCached } from '$lib/server/cache';
 import { apyToApr } from '$lib/core/utils';
 import { type YieldLoop } from '../utils';
 
+type Item = {
+  loanAsset: {
+    address: string,
+    symbol: string,
+  },
+  collateralAsset: {
+    address: string,
+    symbol: string,
+  },
+  lltv: string,
+  state: {
+    liquidityAssetsUsd: string,
+    dailyBorrowApy: number,
+    weeklyBorrowApy: number,
+    monthlyBorrowApy: number,
+    quarterlyBorrowApy: number,
+    yearlyBorrowApy: number,
+  },
+  morphoBlue: {
+    chain: { id: number },
+  },
+  uniqueKey: string,
+};
+
 type Results = {
   data: {
     markets: {
-      items: {
-        loanAsset: {
-          address: string,
-          symbol: string,
-        },
-        collateralAsset: {
-          address: string,
-          symbol: string,
-        },
-        lltv: string,
-        state: {
-          liquidityAssetsUsd: string,
-          dailyBorrowApy: number,
-          weeklyBorrowApy: number,
-          monthlyBorrowApy: number,
-          quarterlyBorrowApy: number,
-          yearlyBorrowApy: number,
-        },
-        morphoBlue: {
-          chain: { id: number },
-        },
-        uniqueKey: string,
-      }[],
+      items: Item[],
       pageInfo: {
         countTotal: number,
         count:number,
@@ -40,8 +42,14 @@ type Results = {
 };
 
 export async function searchMorpho(chainsInput: readonly ChainName[], depeg: number): Promise<YieldLoop[]> {
-  const query = `query ($where: MarketFilters) {
-    markets(first: 5000, where: $where) {
+  const query = `query Markets($skip: Int) {
+    markets(first: 1000, skip: $skip) {
+      pageInfo {
+        countTotal
+        count
+        limit
+        skip
+      }
       items {
         loanAsset {
           address
@@ -67,37 +75,38 @@ export async function searchMorpho(chainsInput: readonly ChainName[], depeg: num
         }
         uniqueKey
       }
-      pageInfo {
-        countTotal
-        count
-        limit
-        skip
-      }
     }
   }`;
 
-  const variables = {
-    where: {
-      chainId_in: [chains.mainnet.id, chains.base.id],
-    },
-  };
+  const results: Item[] = [];
 
-  const results = await fetchCached<Results>(
-    `https://blue-api.morpho.org/graphql`,
-    'https://blue-api.morpho.org/graphql',
-    {
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
+  let page = 0;
+  while (true) {
+    const batch = await fetchCached<Results>(
+      `https://blue-api.morpho.org/graphql`,
+      'https://blue-api.morpho.org/graphql',
+      {
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        method: 'POST',
+        body: JSON.stringify({
+          query,
+          variables: { skip: page * 1000 },
+        }),
       },
-      method: 'POST',
-      body: JSON.stringify({ query, variables }),
-    },
-  );
+    );
+
+    results.push(...batch.data.markets.items);
+    page++;
+
+    if (batch.data.markets.pageInfo.count < 1000) break;
+  };
 
   const chainIds: number[] = toFilteredChainIds(chainsInput, ['mainnet', 'base']);
 
-  return results.data.markets.items
+  return results
     .filter(item => item.collateralAsset && item.loanAsset && item.lltv && item.morphoBlue?.chain && item.state)
     .filter(item => chainIds.includes(item.morphoBlue.chain.id))
     .map(item => ({
