@@ -32,7 +32,7 @@ export async function searchCompound(chainNames: readonly ChainName[], depeg: nu
   const data = await fetchCached<Data[]>(url);
   const filteredData = data.filter(({ chain_id }) => (chainIds as number[]).includes(chain_id));
 
-  const tt = await Promise.all(Map.groupBy(filteredData, ({ comet }) => comet.address)
+  const results = await Promise.all(Map.groupBy(filteredData, ({ comet }) => comet.address)
     .entries()
     .map(async ([cometAddress, items]) => {
       const chainId = items[0].chain_id as ChainId;
@@ -103,7 +103,7 @@ export async function searchCompound(chainNames: readonly ChainName[], depeg: nu
       } as YieldLoop));
     }));
 
-    return tt.flat();
+  return results.flat();
 }
 
 function getChainForUrl(id: number) {

@@ -45,6 +45,10 @@ export const fetchCached = async <T>(
   }
 
   const response = await fetch(url ?? cacheKey, init);
+  if (!response.ok) {
+    throw new Error(`Could not fetch ${url ?? cacheKey}`);
+  }
+
   const data = await response.json() as T;
   const toCache = { timestamp: Date.now(), data };
 

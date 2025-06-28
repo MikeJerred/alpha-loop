@@ -39,9 +39,9 @@ type Results = {
   },
 };
 
-export async function searchMorpho(chains: readonly ChainName[], depeg: number): Promise<YieldLoop[]> {
+export async function searchMorpho(chainsInput: readonly ChainName[], depeg: number): Promise<YieldLoop[]> {
   const query = `query ($where: MarketFilters) {
-    markets(first: 1000, where: $where) {
+    markets(first: 5000, where: $where) {
       items {
         loanAsset {
           address
@@ -76,18 +76,14 @@ export async function searchMorpho(chains: readonly ChainName[], depeg: number):
     }
   }`;
 
-  const chainIds = toFilteredChainIds(chains, ['mainnet', 'base']);
-
-  if (chainIds.length === 0) return [];
-
   const variables = {
     where: {
-      chainId_in: chainIds,
+      chainId_in: [chains.mainnet.id, chains.base.id],
     },
   };
 
   const results = await fetchCached<Results>(
-    `https://blue-api.morpho.org/graphql?chainIds=${JSON.stringify(chainIds)}`,
+    `https://blue-api.morpho.org/graphql`,
     'https://blue-api.morpho.org/graphql',
     {
       headers: {
@@ -99,8 +95,11 @@ export async function searchMorpho(chains: readonly ChainName[], depeg: number):
     },
   );
 
+  const chainIds: number[] = toFilteredChainIds(chainsInput, ['mainnet', 'base']);
+
   return results.data.markets.items
     .filter(item => item.collateralAsset && item.loanAsset && item.lltv && item.morphoBlue?.chain && item.state)
+    .filter(item => chainIds.includes(item.morphoBlue.chain.id))
     .map(item => ({
       protocol: 'morpho',
       chainId: item.morphoBlue.chain.id as ChainId,
