@@ -5,6 +5,8 @@ import type { PageServerLoad } from './$types';
 import { searchAave, searchCompound, searchMorpho } from './lending';
 import { isCorrelated } from './utils';
 
+export const prerender = false;
+
 export const load: PageServerLoad = async ({ url }) => {
   // const bribes = url.searchParams.getAll('bribe'); // count bribe emissions in the apy
   const chains = getValidSearchParams(
