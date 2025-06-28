@@ -1,14 +1,14 @@
 import { getStore } from '@netlify/blobs';
 import { type Abi, type ContractFunctionArgs, type ContractFunctionName, type ContractFunctionReturnType } from 'viem';
-import { NETLIFY_SITE_ID, NETLIFY_TOKEN } from '$env/static/private';
+import { env } from '$env/dynamic/private';
 import { getViemClient, type ChainName } from '$lib/core';
 
 let force = false;
 const store = getStore({
   // edgeURL: NETLIFY_EDGE_URL,
   name: 'alpha-loop',
-  token: NETLIFY_TOKEN,
-  siteID: NETLIFY_SITE_ID,
+  token: env.NETLIFY_TOKEN,
+  siteID: env.NETLIFY_SITE_ID,
 });
 export const setupCache = (_force: boolean) => {
   force = _force;

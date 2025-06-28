@@ -1,4 +1,4 @@
-import { FORCE_PASSWORD } from '$env/static/private';
+import { env } from '$env/dynamic/private';
 import { setupCache } from '$lib/server/cache';
 import { getTokenApr } from '$lib/server/yields';
 import type { PageServerLoad } from './$types';
@@ -14,7 +14,7 @@ export const load: PageServerLoad = async ({ url }) => {
   );
   const depeg = toNumber(url.searchParams.get('depeg')) ?? 0.97;
   const exposures = getValidSearchParams(url.searchParams, 'exposure', ['btc', 'eth', 'usd']);
-  const force = url.searchParams.get('force')?.toLowerCase() === FORCE_PASSWORD.toLowerCase();
+  const force = url.searchParams.get('force')?.toLowerCase() === env.FORCE_PASSWORD.toLowerCase();
   const minLiquidity = toNumber(url.searchParams.get('liquidity')) ?? 10_000;
   const protocols = getValidSearchParams(
     url.searchParams,
