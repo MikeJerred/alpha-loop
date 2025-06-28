@@ -1,4 +1,5 @@
 import { getStore } from '@netlify/blobs';
+import { request as graphQlRequest } from 'graphql-request';
 import { type Abi, type ContractFunctionArgs, type ContractFunctionName, type ContractFunctionReturnType } from 'viem';
 import { env } from '$env/dynamic/private';
 import { getViemClient, type ChainName } from '$lib/core';
@@ -19,6 +20,7 @@ export const setupCache = (_force: boolean) => {
 // also ensure that the same request is not made twice when serving a single request (multiple calls to
 // the same request could happen whilst the store is being updated since we do not await).
 const fetchCache = new Map<string, { timestamp: number, data: unknown }>();
+const graphQlCache = new Map<string, { timestamp: number, data: unknown }>();
 const contractCache = new Map<string, { timestamp: number, data: unknown }>();
 
 const OneHour = 60 * 60 * 1000;
@@ -60,6 +62,37 @@ export const fetchCached = async <T>(
   fetchCache.set(cacheKey, toCache);
   // don't await this to return results faster
   store.set(`fetch:${cacheKey}`, stringifyJson(toCache));
+
+  return data;
+};
+
+export const graphQlCached = async <T>(cacheKey: string, url: string, query: string, variables?: object) => {
+  if (!force) {
+    const cached = graphQlCache.get(cacheKey);
+    if (cached) {
+      const delta = Date.now() - cached.timestamp;
+      if (delta < CacheExpiry) {
+        return cached.data as T;
+      }
+    }
+
+    const blobCached = parseJson<{ timestamp: number, data: T }>(await store.get(`graphql:${cacheKey}`));
+    if (blobCached) {
+      const delta = Date.now() - blobCached.timestamp;
+      if (delta < CacheExpiry) {
+        // update the in memory cache if we found a value in the blob store
+        graphQlCache.set(cacheKey, blobCached);
+        return blobCached.data;
+      }
+    }
+  }
+
+  const data = await graphQlRequest<T>(url, query, variables);
+  const toCache = { timestamp: Date.now(), data };
+
+  graphQlCache.set(cacheKey, toCache);
+  // don't await this to return results faster
+  store.set(`graphql:${cacheKey}`, stringifyJson(toCache));
 
   return data;
 };

@@ -1,5 +1,6 @@
+import { gql } from 'graphql-request';
 import { chains, toFilteredChainIds, type ChainId, type ChainName } from '$lib/core/chains';
-import { fetchCached } from '$lib/server/cache';
+import { graphQlCached } from '$lib/server/cache';
 import { apyToApr } from '$lib/core/utils';
 import { type YieldLoop } from '../utils';
 
@@ -28,21 +29,19 @@ type Item = {
 };
 
 type Results = {
-  data: {
-    markets: {
-      items: Item[],
-      pageInfo: {
-        countTotal: number,
-        count:number,
-        limit: number,
-        skip: number,
-      },
+  markets: {
+    items: Item[],
+    pageInfo: {
+      countTotal: number,
+      count:number,
+      limit: number,
+      skip: number,
     },
   },
 };
 
 export async function searchMorpho(chainsInput: readonly ChainName[], depeg: number): Promise<YieldLoop[]> {
-  const query = `query Markets($skip: Int) {
+  const query = gql`query Markets($skip: Int) {
     markets(first: 1000, skip: $skip) {
       pageInfo {
         countTotal
@@ -59,6 +58,7 @@ export async function searchMorpho(chainsInput: readonly ChainName[], depeg: num
           address
           symbol
         }
+        uniqueKey
         lltv
         state {
           liquidityAssetsUsd
@@ -73,7 +73,6 @@ export async function searchMorpho(chainsInput: readonly ChainName[], depeg: num
             id
           }
         }
-        uniqueKey
       }
     }
   }`;
@@ -82,26 +81,17 @@ export async function searchMorpho(chainsInput: readonly ChainName[], depeg: num
 
   let page = 0;
   while (true) {
-    const batch = await fetchCached<Results>(
-      `https://blue-api.morpho.org/graphql`,
+    const batch = await graphQlCached<Results>(
+      `https://blue-api.morpho.org/graphql : skip=${page * 1000}`,
       'https://blue-api.morpho.org/graphql',
-      {
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        },
-        method: 'POST',
-        body: JSON.stringify({
-          query,
-          variables: { skip: page * 1000 },
-        }),
-      },
+      query,
+      { skip: page * 1000 },
     );
 
-    results.push(...batch.data.markets.items);
+    results.push(...batch.markets.items);
     page++;
 
-    if (batch.data.markets.pageInfo.count < 1000) break;
+    if (batch.markets.pageInfo.count < 1000) break;
   };
 
   const chainIds: number[] = toFilteredChainIds(chainsInput, ['mainnet', 'base']);
