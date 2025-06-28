@@ -1,18 +1,17 @@
-import { type KVNamespace } from '@cloudflare/workers-types';
+import { getStore } from '@netlify/blobs';
 import { type Abi, type ContractFunctionArgs, type ContractFunctionName, type ContractFunctionReturnType } from 'viem';
 import { getViemClient, type ChainName } from '$lib/core';
 
 let force = false;
-let kv: KVNamespace | undefined = undefined;
-export const setupCache = (_force: boolean, _kv: KVNamespace | undefined) => {
+const store = getStore('alpha-loop');
+export const setupCache = (_force: boolean) => {
   force = _force;
-  kv = _kv;
 };
 
-// cache in cloudflare kv, but also in memory. Retrieving / updating the kv store is asynchronous, so by
-// having an additional memory cache we can return results faster (by not awaiting on the kv update), and
+// cache in a blob store, but also in memory. Retrieving / updating the store is asynchronous, so by
+// having an additional memory cache we can return results faster (by not awaiting on the update), and
 // also ensure that the same request is not made twice when serving a single request (multiple calls to
-// the same request could happen whilst the kv store is being updated since we do not await).
+// the same request could happen whilst the store is being updated since we do not await).
 const fetchCache = new Map<string, { timestamp: number, data: unknown }>();
 const contractCache = new Map<string, { timestamp: number, data: unknown }>();
 
@@ -33,13 +32,13 @@ export const fetchCached = async <T>(
       }
     }
 
-    const kvCached = parseJson<{ timestamp: number, data: T }>(await kv?.get(`fetch:${cacheKey}`));
-    if (kvCached) {
-      const delta = Date.now() - kvCached.timestamp;
+    const blobCached = parseJson<{ timestamp: number, data: T }>(await store.get(`fetch:${cacheKey}`));
+    if (blobCached) {
+      const delta = Date.now() - blobCached.timestamp;
       if (delta < CacheExpiry) {
-        // update the in memory cache if we found a value in the kv store
-        fetchCache.set(cacheKey, kvCached);
-        return kvCached.data;
+        // update the in memory cache if we found a value in the blob store
+        fetchCache.set(cacheKey, blobCached);
+        return blobCached.data;
       }
     }
   }
@@ -54,7 +53,7 @@ export const fetchCached = async <T>(
 
   fetchCache.set(cacheKey, toCache);
   // don't await this to return results faster
-  kv?.put(`fetch:${cacheKey}`, stringifyJson(toCache), { expirationTtl: CacheExpiry / 1000 });
+  store.set(`fetch:${cacheKey}`, stringifyJson(toCache));
 
   return data;
 };
@@ -89,15 +88,15 @@ export const readContractCached = async <
       }
     }
 
-    const kvCached = parseJson<{ timestamp: number, data: ContractReturn<abi, functionName> }>(
-      await kv?.get(`contract:${cacheKey}`)
+    const blobCached = parseJson<{ timestamp: number, data: ContractReturn<abi, functionName> }>(
+      await store.get(`contract:${cacheKey}`)
     );
-    if (kvCached) {
-      const delta = Date.now() - kvCached.timestamp;
+    if (blobCached) {
+      const delta = Date.now() - blobCached.timestamp;
       if (delta < CacheExpiry) {
-        // update the in memory cache if we found a value in the kv store
-        contractCache.set(cacheKey, kvCached);
-        return kvCached.data;
+        // update the in memory cache if we found a value in the blob store
+        contractCache.set(cacheKey, blobCached);
+        return blobCached.data;
       }
     }
   }
@@ -108,7 +107,7 @@ export const readContractCached = async <
 
   contractCache.set(cacheKey, toCache);
   // don't await this to return results faster
-  kv?.put(`contract:${cacheKey}`, stringifyJson(toCache), { expirationTtl: CacheExpiry / 1000 });
+  store.set(`contract:${cacheKey}`, stringifyJson(toCache));
 
   return data;
 };
