@@ -5,7 +5,7 @@ import type { PageServerLoad } from './$types';
 import { searchAave, searchCompound, searchMorpho } from './lending';
 import { isCorrelated } from './utils';
 
-export const load: PageServerLoad = async ({ platform, url }) => {
+export const load: PageServerLoad = async ({ url }) => {
   // const bribes = url.searchParams.getAll('bribe'); // count bribe emissions in the apy
   const chains = getValidSearchParams(
     url.searchParams,
@@ -24,7 +24,7 @@ export const load: PageServerLoad = async ({ platform, url }) => {
   const sortOrder = url.searchParams.get('sort') ?? 'yield';
   // const page = Number(url.searchParams.get('page') ?? '1');
 
-  setupCache(force, platform?.env?.EXTERNAL_API_CACHE);
+  setupCache(force);
 
   const results = await Promise.all(protocols.map(async protocol => {
     switch (protocol) {
