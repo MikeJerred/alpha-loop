@@ -16,7 +16,8 @@
   },
   "dependencies": {
     "@netlify/blobs": "^10.0.3",
-    "@supabase/supabase-js": "^2.50.3"
+    "@supabase/supabase-js": "^2.50.3",
+    "viem": "^2.31.7"
   },
   "devDependencies": {
     "@eslint/compat": "^1.2.5",
