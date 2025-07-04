@@ -6,8 +6,8 @@
   import ExposureIcon from '$lib/client/ExposureIcon.svelte';
   import ProtocolIcon from '$lib/client/ProtocolIcon.svelte';
   import Percent from '$lib/client/Percent.svelte';
-  import type { ChainName, Exposure, Protocol } from '$lib/core';
   import { chains, exposures, protocols, throttle } from '$lib/core';
+  import type { Chain, Exposure, Protocol } from '$lib/core';
   import type { PageProps } from './$types';
   import Toggle from './Toggle.svelte';
 
@@ -26,7 +26,7 @@
   });
 
   const chainItems = Object.entries(chains)
-    .map(([urlName, { id, name }]) => ({ id, name, urlName: urlName as ChainName }))
+    .map(([urlName, { id, name }]) => ({ id, name, urlName: urlName as Chain }))
     .sort((a, b) => a.id - b.id);
   const exposureItems = Object.entries(exposures).map(([urlName, { name }]) => ({ name, urlName: urlName as Exposure }));
   const protocolItems = Object.entries(protocols).map(([urlName, { name }]) => ({ name, urlName: urlName as Protocol }));

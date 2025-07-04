@@ -1,10 +1,11 @@
 <script lang="ts">
-  import { type ChainId, chains, getChainName } from '$lib/core';
+  import { chains, type ChainId } from '$lib/core';
   import arbitrumIcon from '$lib/images/chains/arbitrum.svg';
   import baseIcon from '$lib/images/chains/base.svg';
-  import berachainIcon from '$lib/images/chains/berachain.svg';
+  // import berachainIcon from '$lib/images/chains/berachain.svg';
+  import bscIcon from '$lib/images/chains/bsc.svg';
   import ethereumIcon from '$lib/images/chains/ethereum.svg';
-  import gnosisIcon from '$lib/images/chains/gnosis.svg';
+  // import gnosisIcon from '$lib/images/chains/gnosis.svg';
   import lineaIcon from '$lib/images/chains/linea.svg';
   import mantleIcon from '$lib/images/chains/mantle.svg';
   import optimismIcon from '$lib/images/chains/optimism.svg';
@@ -17,8 +18,7 @@
   const image = $derived(
     id === chains.arbitrum.id ? arbitrumIcon
     : id === chains.base.id ? baseIcon
-    : id === chains.berachain.id ? berachainIcon
-    : id === chains.gnosis.id ? gnosisIcon
+    : id === chains.bsc.id ? bscIcon
     : id === chains.linea.id ? lineaIcon
     : id === chains.mainnet.id ? ethereumIcon
     : id === chains.mantle.id ? mantleIcon

@@ -65,10 +65,11 @@ export async function getTokenApr(symbol: string, chainId: number, address: stri
     }
   }
   if (symbol.startsWith('lp-')) {
-    const { aggregatedApy } = await fetchCached<PendleMarketDataResponse>(
+    const response = await fetchCached<PendleMarketDataResponse>(
       `https://api-v2.pendle.finance/core/v2/${chainId}/markets/${address}/data`,
-    );
-    return apyToApr(aggregatedApy);
+    ).catch(() => null);
+    if (response)
+      return apyToApr(response.aggregatedApy);
   }
 
   if (isValidDefiLlama(symbol)) {

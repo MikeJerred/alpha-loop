@@ -1,13 +1,4 @@
-export {
-  type ChainId,
-  type ChainName,
-  chains,
-  getChainId,
-  getChainName,
-  getViemClient,
-  getViemClientFromId,
-  toFilteredChainIds,
-} from './chains';
-export { type Exposure, exposures } from './exposures';
-export { type Protocol, protocols } from './protocols';
+export { chains, type Chain, type ChainId } from './chains';
+export { exposures, type Exposure } from './exposures';
+export { protocols, type Protocol } from './protocols';
 export { apyToApr, throttle } from './utils';

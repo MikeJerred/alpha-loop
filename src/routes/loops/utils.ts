@@ -1,9 +1,8 @@
-import type { ChainId } from '../../lib/core/chains';
 import type { Protocol } from '../../lib/core/protocols';
 
 export type YieldLoop = {
   protocol: Protocol,
-  chainId: ChainId,
+  chainId: number,
   borrowAsset: {
     address: string,
     symbol: string,

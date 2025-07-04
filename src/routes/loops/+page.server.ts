@@ -1,8 +1,7 @@
-import { env } from '$env/dynamic/private';
-import { setupCache } from '$lib/server/cache';
+import type { ChainId, Protocol } from '$lib/core';
+import { getLoops } from '$lib/server/database';
 import { getTokenApr } from '$lib/server/yields';
 import type { PageServerLoad } from './$types';
-import { searchAave, searchCompound, searchMorpho } from './lending';
 import { isCorrelated } from './utils';
 
 export const prerender = false;
@@ -16,69 +15,71 @@ export const load: PageServerLoad = async ({ url }) => {
   );
   const depeg = toNumber(url.searchParams.get('depeg')) ?? 0.97;
   const exposures = getValidSearchParams(url.searchParams, 'exposure', ['btc', 'eth', 'usd']);
-  const force = url.searchParams.get('force')?.toLowerCase() === env.FORCE_PASSWORD.toLowerCase();
-  const minLiquidity = toNumber(url.searchParams.get('liquidity')) ?? 10_000;
+  const minLiquidity = toNumber(url.searchParams.get('liquidity')) ?? null;
   const protocols = getValidSearchParams(
     url.searchParams,
     'protocol',
-    ['aave', 'compound', 'dolomite', 'euler', 'morpho', 'spark', 'zerolend'],
+    ['aave', 'compound', 'morpho'],
   );
   const sortOrder = url.searchParams.get('sort') ?? 'yield';
   // const page = Number(url.searchParams.get('page') ?? '1');
 
-  setupCache(force);
+  const loops = await getLoops(chains, minLiquidity, protocols);
+  if (!loops) return { loops: [] };
 
-  const results = await Promise.all(protocols.map(async protocol => {
-    switch (protocol) {
-      case 'aave': return await searchAave(chains, depeg);
-      case 'compound': return await searchCompound(chains, depeg);
-      case 'morpho': return await searchMorpho(chains, depeg);
-
-      case 'dolomite':
-      case 'euler':
-      case 'spark':
-      case 'zerolend':
-      default:
-        return [];
-    }
-  }));
-
-  const loops = await Promise.all(results.flat()
-    .filter(item => exposures.some(exposure =>
-      isCorrelated(item.supplyAsset.symbol.toLowerCase(), exposure) &&
-      isCorrelated(item.borrowAsset.symbol.toLowerCase(), exposure)
+  const results = await Promise.all(loops
+    .filter(loop => exposures.some(exposure =>
+      isCorrelated(loop.supply_asset_symbol.toLowerCase(), exposure) &&
+      isCorrelated(loop.borrow_asset_symbol.toLowerCase(), exposure)
     ))
-    .filter(item => item.liquidityUSD >= minLiquidity)
-    .map(async item => {
-      const supplyTokenApr = await getTokenApr(item.supplyAsset.symbol, item.chainId, item.supplyAsset.address);
-      const collateralApr = (1 + item.supplyApr.weekly) * (1 + supplyTokenApr) - 1;
-      const borrowTokenApr = await getTokenApr(item.borrowAsset.symbol, item.chainId, item.borrowAsset.address);
-      const borrowApr = (1 + item.borrowApr.weekly) * (1 + borrowTokenApr) - 1;
-      const leverage = 1 / (1 - item.ltv);
+    .filter(loop => !minLiquidity || (
+      loop.liquidity_usd !== null &&
+      !isNaN(loop.liquidity_usd) &&
+      loop.liquidity_usd >= minLiquidity
+    ))
+    .map(async loop => {
+      const supplyTokenApr = await getTokenApr(loop.supply_asset_symbol, loop.chain_id, loop.supply_asset_address);
+      const supplyApr = (1 + loop.supply_apr_weekly) * (1 + supplyTokenApr) - 1;
+      const borrowTokenApr = await getTokenApr(loop.borrow_asset_symbol, loop.chain_id, loop.borrow_asset_address);
+      const borrowApr = (1 + loop.borrow_apr_weekly) * (1 + borrowTokenApr) - 1;
+      const ltv = Math.min(loop.max_ltv, loop.lltv * depeg)
+      const leverage = 1 / (1 - ltv);
 
       return {
-        ...item,
-        collateralApr,
+        protocol: loop.protocol as Protocol,
+        chainId: loop.chain_id as ChainId,
+        borrowAsset: {
+          address: loop.borrow_asset_address,
+          symbol: loop.borrow_asset_symbol,
+        },
+        supplyAsset: {
+          address: loop.supply_asset_address,
+          symbol: loop.supply_asset_symbol,
+        },
+        liquidityUSD: loop.liquidity_usd,
+        ltv: ltv,
+        link: loop.link,
+
+        collateralApr: supplyApr,
         borrowApr,
-        yieldApr: calculateYield(collateralApr, borrowApr, item.ltv),
+        yieldApr: calculateYield(supplyApr, borrowApr, ltv),
         leverage,
       };
-    })
-  );
+    }));
 
   switch (sortOrder) {
     case 'yield':
     default:
-      loops.sort((a, b) => b.yieldApr - a.yieldApr);
+      results.sort((a, b) => b.yieldApr - a.yieldApr);
       break;
 
-    case 'lltv':
-      loops.sort((a, b) => b.ltv - a.ltv);
+    case 'ltv':
+      results.sort((a, b) => b.ltv - a.ltv);
       break;
   }
 
   return {
-    loops
+    loops: results
   };
 };
 
@@ -96,7 +97,7 @@ function toNumber(value: string | null) {
   return isNaN(result)? null : result;
 }
 
-function calculateYield(collateralApr: number, borrowApr: number, ltv: number) {
+function calculateYield(supplyApr: number, borrowApr: number, ltv: number) {
   const leverage = 1 + ltv / (1 - ltv);
-  return leverage * (collateralApr - ltv * borrowApr);
+  return leverage * (supplyApr - ltv * borrowApr);
 }
