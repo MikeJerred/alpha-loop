@@ -66,6 +66,7 @@ export async function getTokenApr(symbol: string, chainId: number, address: stri
   }
   if (symbol.startsWith('lp-')) {
     const response = await fetchCached<PendleMarketDataResponse>(
+      `pendle/${chainId}/markets/${address}`,
       `https://api-v2.pendle.finance/core/v2/${chainId}/markets/${address}/data`,
     ).catch(() => null);
     if (response)
@@ -74,7 +75,10 @@ export async function getTokenApr(symbol: string, chainId: number, address: stri
 
   if (isValidDefiLlama(symbol)) {
     const pool = defiLlamaPools[symbol];
-    const { data } = await fetchCached<DefiLlamaPoolResponse>(`https://yields.llama.fi/poolsEnriched?pool=${pool}`);
+    const { data } = await fetchCached<DefiLlamaPoolResponse>(
+      `defillama/poolsEnriched/${pool}`,
+      `https://yields.llama.fi/poolsEnriched?pool=${pool}`,
+    );
 
     return apyToApr(data[0].apyMean30d / 100);
   }
@@ -84,6 +88,7 @@ export async function getTokenApr(symbol: string, chainId: number, address: stri
 
 async function getPendleMarkets(chainId: number) {
   const { markets } = await fetchCached<PendleMarketsResponse>(
+    `pendle/${chainId}/markets/active`,
     `https://api-v2.pendle.finance/core/v1/${chainId}/markets/active`,
   );
   return markets;
