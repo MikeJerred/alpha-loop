@@ -50,12 +50,12 @@ export type Database = {
           lltv: number
           max_ltv: number
           protocol: string
-          supply_asset_address: string
-          supply_asset_symbol: string
           supply_apr_daily: number
           supply_apr_monthly: number
           supply_apr_weekly: number
           supply_apr_yearly: number
+          supply_asset_address: string
+          supply_asset_symbol: string
         }
         Insert: {
           borrow_apr_daily?: number
@@ -72,12 +72,12 @@ export type Database = {
           lltv?: number
           max_ltv?: number
           protocol?: string
-          supply_asset_address?: string
-          supply_asset_symbol?: string
           supply_apr_daily?: number
           supply_apr_monthly?: number
           supply_apr_weekly?: number
           supply_apr_yearly?: number
+          supply_asset_address?: string
+          supply_asset_symbol?: string
         }
         Update: {
           borrow_apr_daily?: number | null
@@ -94,12 +94,45 @@ export type Database = {
           lltv?: number | null
           max_ltv?: number | null
           protocol?: string | null
-          supply_asset_address?: string | null
-          supply_asset_symbol?: string | null
           supply_apr_daily?: number | null
           supply_apr_monthly?: number | null
           supply_apr_weekly?: number | null
           supply_apr_yearly?: number | null
+          supply_asset_address?: string | null
+          supply_asset_symbol?: string | null
+        }
+        Relationships: []
+      }
+      yields: {
+        Row: {
+          asset_addresses: string[]
+          asset_symbol: string
+          created_at: string
+          id: number
+          yield_apr_daily: number | null
+          yield_apr_monthly: number | null
+          yield_apr_weekly: number | null
+          yield_apr_yearly: number | null
+        }
+        Insert: {
+          asset_addresses: string[]
+          asset_symbol: string
+          created_at?: string
+          id?: number
+          yield_apr_daily?: number | null
+          yield_apr_monthly?: number | null
+          yield_apr_weekly?: number | null
+          yield_apr_yearly?: number | null
+        }
+        Update: {
+          asset_addresses?: string[]
+          asset_symbol?: string
+          created_at?: string
+          id?: number
+          yield_apr_daily?: number | null
+          yield_apr_monthly?: number | null
+          yield_apr_weekly?: number | null
+          yield_apr_yearly?: number | null
         }
         Relationships: []
       }
