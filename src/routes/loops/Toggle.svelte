@@ -32,7 +32,6 @@
     ? selectedUrlNames.filter(name => name !== urlName)
     : [...selectedUrlNames, urlName]
   );
-
 </script>
 
 <Tooltip

@@ -6,7 +6,7 @@
   import ExposureIcon from '$lib/client/ExposureIcon.svelte';
   import ProtocolIcon from '$lib/client/ProtocolIcon.svelte';
   import Percent from '$lib/client/Percent.svelte';
-  import { chains, exposures, protocols, throttle } from '$lib/core';
+  import { chains as allChains, exposures as alllExposures, protocols as allProtocols, throttle } from '$lib/core';
   import type { Chain, Exposure, Protocol } from '$lib/core';
   import type { PageProps } from './$types';
   import Toggle from './Toggle.svelte';
@@ -25,11 +25,11 @@
     goto(`?${params.toString()}`, { noScroll: true });
   });
 
-  const chainItems = Object.entries(chains)
+  const chainItems = Object.entries(allChains)
     .map(([urlName, { id, name }]) => ({ id, name, urlName: urlName as Chain }))
     .sort((a, b) => a.id - b.id);
-  const exposureItems = Object.entries(exposures).map(([urlName, { name }]) => ({ name, urlName: urlName as Exposure }));
-  const protocolItems = Object.entries(protocols).map(([urlName, { name }]) => ({ name, urlName: urlName as Protocol }));
+  const exposureItems = Object.entries(alllExposures).map(([urlName, { name }]) => ({ name, urlName: urlName as Exposure }));
+  const protocolItems = Object.entries(allProtocols).map(([urlName, { name }]) => ({ name, urlName: urlName as Protocol }));
 </script>
 
 <style>
@@ -144,7 +144,7 @@
       <div class="item hidden md:flex"></div>
       <div class="item hidden md:flex justify-center">{loop.leverage.toFixed(1)}</div>
       <div class="item hidden md:flex"></div>
-      <div class="item hidden md:flex justify-center"><Percent value={loop.collateralApr} /></div>
+      <div class="item hidden md:flex justify-center"><Percent value={loop.supplyApr} /></div>
       <div class="item hidden md:flex"></div>
       <div class="item hidden md:flex justify-center"><Percent value={loop.borrowApr} /></div>
       <div class="item hidden md:flex"></div>

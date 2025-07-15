@@ -1,17 +1,16 @@
 import type { ChainId, Protocol } from '$lib/core';
-import { getLoops } from '$lib/server/database';
-import { getTokenApr } from '$lib/server/yields';
-import type { PageServerLoad } from './$types';
+import { getLoops } from '$lib/data/database';
+import type { PageLoad } from './$types';
 import { isCorrelated } from './utils';
 
 export const prerender = false;
 
-export const load: PageServerLoad = async ({ url }) => {
+export const load: PageLoad = async ({ url }) => {
   // const bribes = url.searchParams.getAll('bribe'); // count bribe emissions in the apy
   const chains = getValidSearchParams(
     url.searchParams,
     'chain',
-    ['mainnet', 'arbitrum', 'base', 'linea', 'mantle', 'optimism', 'scroll', 'zksync'],
+    ['mainnet', 'arbitrum', 'base', 'linea', 'mantle', 'optimism', 'scroll', 'unichain', 'zksync'],
   );
   const depeg = toNumber(url.searchParams.get('depeg')) ?? 0.97;
   const exposures = getValidSearchParams(url.searchParams, 'exposure', ['btc', 'eth', 'usd']);
@@ -38,10 +37,10 @@ export const load: PageServerLoad = async ({ url }) => {
       loop.liquidity_usd >= minLiquidity
     ))
     .map(async loop => {
-      const supplyTokenApr = await getTokenApr(loop.supply_asset_symbol, loop.chain_id, loop.supply_asset_address);
-      const supplyApr = (1 + loop.supply_apr_weekly) * (1 + supplyTokenApr) - 1;
-      const borrowTokenApr = await getTokenApr(loop.borrow_asset_symbol, loop.chain_id, loop.borrow_asset_address);
-      const borrowApr = (1 + loop.borrow_apr_weekly) * (1 + borrowTokenApr) - 1;
+      const supplyYield = loop.supply_yield_monthly ?? loop.supply_yield_weekly ?? loop.supply_yield_daily ?? 0;
+      const borrowYield = loop.borrow_yield_monthly ?? loop.borrow_yield_weekly ?? loop.borrow_yield_daily ?? 0;
+      const supplyApr = (1 + loop.supply_apr_weekly) * (1 + supplyYield) - 1;
+      const borrowApr = (1 + loop.borrow_apr_weekly) * (1 + borrowYield) - 1;
       const ltv = Math.min(loop.max_ltv, loop.lltv * depeg)
       const leverage = 1 / (1 - ltv);
 
@@ -60,7 +59,7 @@ export const load: PageServerLoad = async ({ url }) => {
         ltv: ltv,
         link: loop.link,
 
-        collateralApr: supplyApr,
+        supplyApr,
         borrowApr,
         yieldApr: calculateYield(supplyApr, borrowApr, ltv),
         leverage,
