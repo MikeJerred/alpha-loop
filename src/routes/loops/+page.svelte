@@ -15,7 +15,7 @@
 
   const liquidity = $derived.by(() => {
     const value = page.url.searchParams.get('liquidity');
-    return value !== null && !isNaN(parseInt(value)) ? parseInt(value) : 10_000;
+    return value !== null && !isNaN(parseInt(value)) ? parseInt(value) : 100_000;
   });
 
   const setLiquidity = throttle((value: string) => {

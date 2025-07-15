@@ -28,17 +28,19 @@
     goto(`?${params.toString()}`, { noScroll: true });
   });
 
-  const toggleItem = (urlName: string) => updateUrl(selectedUrlNames.includes(urlName)
-    ? selectedUrlNames.filter(name => name !== urlName)
-    : [...selectedUrlNames, urlName]
-  );
+  const toggleItem = (event: MouseEvent, urlName: string) => updateUrl(selectedUrlNames.length === 0 && event.ctrlKey
+    ? allItems.filter(item => item.urlName !== urlName).map(item => item.urlName)
+    : selectedUrlNames.includes(urlName)
+      ? selectedUrlNames.filter(name => name !== urlName)
+      : [...selectedUrlNames, urlName]
+    );
 </script>
 
 <Tooltip
   contentBase="card preset-filled px-3 py-1"
   arrow
   openDelay={200}
-  onclick={() => toggleItem(urlName)}
+  onclick={(event: MouseEvent) => toggleItem(event, urlName)}
 >
   {#snippet trigger()}
     <span

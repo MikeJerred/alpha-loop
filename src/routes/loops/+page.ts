@@ -14,7 +14,7 @@ export const load: PageLoad = async ({ url }) => {
   );
   const depeg = toNumber(url.searchParams.get('depeg')) ?? 0.97;
   const exposures = getValidSearchParams(url.searchParams, 'exposure', ['btc', 'eth', 'usd']);
-  const minLiquidity = toNumber(url.searchParams.get('liquidity')) ?? null;
+  const minLiquidity = toNumber(url.searchParams.get('liquidity')) ?? 100_000;
   const protocols = getValidSearchParams(
     url.searchParams,
     'protocol',
