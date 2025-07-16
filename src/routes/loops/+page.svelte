@@ -94,7 +94,7 @@
     </div>
   </label>
 
-  <label class="label flex-auto w-fit">
+  <label class="label flex-initial w-fit">
     <span class="label-text">Exposure</span>
     <div class="flex gap-2 items-center">
       {#each exposureItems as exposure}
