@@ -22,6 +22,7 @@ export const load: PageLoad = async ({ url }) => {
   );
   const sortOrder = url.searchParams.get('sort') ?? 'yield';
   // const page = Number(url.searchParams.get('page') ?? '1');
+  const yieldSpan = url.searchParams.get('span') ?? 'week';
 
   const loops = await getLoops(chains, minLiquidity, protocols);
   if (!loops) return { loops: [] };
@@ -37,10 +38,41 @@ export const load: PageLoad = async ({ url }) => {
       loop.liquidity_usd >= minLiquidity
     ))
     .map(async loop => {
-      const supplyYield = loop.supply_yield_monthly ?? loop.supply_yield_weekly ?? loop.supply_yield_daily ?? 0;
-      const borrowYield = loop.borrow_yield_monthly ?? loop.borrow_yield_weekly ?? loop.borrow_yield_daily ?? 0;
-      const supplyApr = (1 + loop.supply_apr_weekly) * (1 + supplyYield) - 1;
-      const borrowApr = (1 + loop.borrow_apr_weekly) * (1 + borrowYield) - 1;
+      let supplyApr: number;
+      let supplyYield: number;
+      let borrowApr: number;
+      let borrowYield: number;
+
+      switch (yieldSpan) {
+        case 'day':
+          supplyApr = loop.supply_apr_daily;
+          borrowApr = loop.borrow_apr_daily;
+          supplyYield = loop.supply_yield_daily ?? loop.supply_yield_weekly ?? loop.supply_yield_monthly ?? loop.supply_yield_yearly ?? 0;
+          borrowYield = loop.borrow_yield_daily ?? loop.borrow_yield_weekly ?? loop.borrow_yield_monthly ?? loop.borrow_yield_yearly ?? 0;
+          break;
+        default:
+        case 'week':
+          supplyApr = loop.supply_apr_weekly;
+          borrowApr = loop.borrow_apr_weekly;
+          supplyYield = loop.supply_yield_weekly ?? loop.supply_yield_monthly ?? loop.supply_yield_yearly ?? loop.supply_yield_daily ?? 0;
+          borrowYield = loop.borrow_yield_weekly ?? loop.borrow_yield_monthly ?? loop.borrow_yield_yearly ?? loop.borrow_yield_daily ?? 0;
+          break;
+        case 'month':
+          supplyApr = loop.supply_apr_monthly;
+          borrowApr = loop.borrow_apr_monthly;
+          supplyYield = loop.supply_yield_monthly ?? loop.supply_yield_yearly ?? loop.supply_yield_weekly ?? loop.supply_yield_daily ?? 0;
+          borrowYield = loop.borrow_yield_monthly ?? loop.borrow_yield_yearly ?? loop.borrow_yield_weekly ?? loop.borrow_yield_daily ?? 0;
+          break;
+        case 'year':
+          supplyApr = loop.supply_apr_yearly;
+          borrowApr = loop.borrow_apr_yearly;
+          supplyYield = loop.supply_yield_yearly ?? loop.supply_yield_monthly ?? loop.supply_yield_weekly ?? loop.supply_yield_daily ?? 0;
+          borrowYield = loop.borrow_yield_yearly ?? loop.borrow_yield_monthly ?? loop.borrow_yield_weekly ?? loop.borrow_yield_daily ?? 0;
+          break;
+      }
+
+      supplyApr = (1 + supplyApr) * (1 + supplyYield) - 1;
+      borrowApr = (1 + borrowApr) * (1 + borrowYield) - 1;
       const ltv = Math.min(loop.max_ltv, loop.lltv * depeg)
       const leverage = 1 / (1 - ltv);
 

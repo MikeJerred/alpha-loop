@@ -25,6 +25,18 @@
     goto(`?${params.toString()}`, { noScroll: true });
   });
 
+  const yieldSpan = $derived.by(() => {
+    const value = page.url.searchParams.get('span');
+    return value && ['day', 'week', 'month', 'year'].includes(value) ? value : 'week';
+  });
+
+  const setYieldSpan = throttle((value: string) => {
+    const params = new URLSearchParams(page.url.searchParams);
+    params.set('span', value);
+
+    goto(`?${params.toString()}`, { noScroll: true });
+  });
+
   const chainItems = Object.entries(allChains)
     .map(([urlName, { id, name }]) => ({ id, name, urlName: urlName as Chain }))
     .sort((a, b) => a.id - b.id);
@@ -106,6 +118,19 @@
         oninput={event => setLiquidity(event.currentTarget.value)}
       />
     </div>
+  </label>
+
+  <label class="label flex-auto w-fit">
+    <span class="label-text">Yield span</span>
+    <select class="select"
+      value={yieldSpan}
+      oninput={event => setYieldSpan(event.currentTarget.value)}
+    >
+      <option value="day">Daily</option>
+      <option value="week">Weekly</option>
+      <option value="month">Monthly</option>
+      <option value="year">Yearly</option>
+    </select>
   </label>
 </form>
 
