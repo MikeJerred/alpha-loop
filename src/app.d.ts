@@ -8,10 +8,6 @@ declare global {
     // interface PageState {}
     // interface Platform {}
   }
-
-  interface Window {
-    ethereum?: { request(...args: unknown): Promise<unknown> };
-  }
 }
 
 export {};

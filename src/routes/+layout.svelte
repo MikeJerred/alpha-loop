@@ -1,4 +1,5 @@
 <script lang="ts">
+  import 'viem/window';
   import Header from './Header.svelte';
   import '../app.css';
 

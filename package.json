@@ -15,9 +15,9 @@
     "lint": "eslint ."
   },
   "dependencies": {
-    "@netlify/blobs": "^10.0.3",
+    "@bgd-labs/aave-address-book": "^4.25.1",
     "@supabase/supabase-js": "^2.51.0",
-    "viem": "^2.31.7"
+    "viem": "^2.32.0"
   },
   "devDependencies": {
     "@eslint/compat": "^1.2.5",
