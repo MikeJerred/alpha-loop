@@ -8,7 +8,7 @@
       return;
     }
 
-    const chain = chains.base;
+    const chain = chains.base[0];
 
     const client = createWalletClient({
       chain: chain,

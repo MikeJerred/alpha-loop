@@ -38,7 +38,7 @@
   });
 
   const chainItems = Object.entries(allChains)
-    .map(([urlName, { id, name }]) => ({ id, name, urlName: urlName as Chain }))
+    .map(([urlName, [{ id, name }]]) => ({ id, name, urlName: urlName as Chain }))
     .sort((a, b) => a.id - b.id);
   const exposureItems = Object.entries(alllExposures).map(([urlName, { name }]) => ({ name, urlName: urlName as Exposure }));
   const protocolItems = Object.entries(allProtocols).map(([urlName, { name }]) => ({ name, urlName: urlName as Protocol }));

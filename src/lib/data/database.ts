@@ -13,7 +13,7 @@ export const getLoops = async (
   let query = supabase.from('loops_with_yields').select(`*`);
 
   if (chains) {
-    const chainIds = chains.map(chain => allChains[chain].id);
+    const chainIds = chains.map(chain => allChains[chain][0].id);
     query = query.in('chain_id', chainIds);
   }
 

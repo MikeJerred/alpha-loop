@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { chains, type ChainId } from '$lib/core';
+  import { chains } from '$lib/core';
   import arbitrumIcon from '$lib/images/chains/arbitrum.svg';
   import baseIcon from '$lib/images/chains/base.svg';
   // import berachainIcon from '$lib/images/chains/berachain.svg';
@@ -14,24 +14,24 @@
   import unichainIcon from '$lib/images/chains/unichain.svg';
   import zksyncIcon from '$lib/images/chains/zksync.svg';
 
-  let { id, size = 16, title = true }: { id: ChainId, size?: number, title?: boolean } = $props();
+  let { id, size = 16, title = true }: { id: number, size?: number, title?: boolean } = $props();
 
   const image = $derived(
-    id === chains.arbitrum.id ? arbitrumIcon
-    : id === chains.base.id ? baseIcon
-    // : id === chains.bsc.id ? bscIcon
-    : id === chains.linea.id ? lineaIcon
-    : id === chains.mainnet.id ? ethereumIcon
-    : id === chains.mantle.id ? mantleIcon
-    : id === chains.optimism.id ? optimismIcon
-    : id === chains.polygon.id ? polygonIcon
-    : id === chains.scroll.id ? scrollIcon
-    : id === chains.unichain.id ? unichainIcon
-    : id === chains.zksync.id ? zksyncIcon
+    id === chains.arbitrum[0].id ? arbitrumIcon
+    : id === chains.base[0].id ? baseIcon
+    // : id === chains.bsc[0].id ? bscIcon
+    : id === chains.linea[0].id ? lineaIcon
+    : id === chains.mainnet[0].id ? ethereumIcon
+    : id === chains.mantle[0].id ? mantleIcon
+    : id === chains.optimism[0].id ? optimismIcon
+    : id === chains.polygon[0].id ? polygonIcon
+    : id === chains.scroll[0].id ? scrollIcon
+    : id === chains.unichain[0].id ? unichainIcon
+    : id === chains.zksync[0].id ? zksyncIcon
     : null
   );
 
-  const titleText = $derived(Object.values(chains).find(chain => chain.id === id)?.name);
+  const titleText = $derived(Object.values(chains).map(([chain]) => chain).find(chain => chain.id === id)?.name);
 </script>
 
 <style>
