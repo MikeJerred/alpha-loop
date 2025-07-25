@@ -1,26 +1,18 @@
 <script lang="ts">
-  import {
-    AaveV3Arbitrum,
-    AaveV3Base,
-    AaveV3Ethereum,
-    AaveV3EthereumEtherFi,
-    AaveV3EthereumLido,
-    AaveV3Scroll,
-    AaveV3ZkSync,
-  } from '@bgd-labs/aave-address-book';
-  import { IAaveOracle_ABI } from '@bgd-labs/aave-address-book/abis';
+  import { ProgressRing } from '@skeletonlabs/skeleton-svelte';
   import { onMount } from 'svelte';
-  import { createPublicClient, createWalletClient, custom, erc20Abi, fallback, getContract, http } from 'viem';
-  import { arbitrum, base, mainnet, scroll, zksync } from 'viem/chains';
-  import { IUiPoolDataProvider_ABI } from '$lib/abi/AaveUiPoolDataProvider';
+  import ProtocolIcon from '$lib/client/ProtocolIcon.svelte';
   import ChainIcon from '$lib/client/ChainIcon.svelte';
   import Currency from '$lib/client/Currency.svelte';
-  import { chains, isDefined } from '$lib/core';
+  import type { Protocol } from '$lib/core';
+  import { getAavePositions } from './aave';
+  import { getCompoundPositions } from './compound';
+  import { getMorphoPositions } from './morho';
 
   let view: 'error' | 'loading' | 'normal' = 'loading';
 
   type TokenDetails = {
-    address: `0x${string}`;
+    address: string;
     symbol: string;
     amount: number;
     usdValue: number;
@@ -28,20 +20,11 @@
 
   let displayData: {
     chainId: number;
-    provider: string;
+    provider: Protocol;
     supplied: TokenDetails[];
     borrowed: TokenDetails[];
+    total: number;
   }[] = [];
-
-  const providers = {
-    mainnet: [AaveV3Ethereum, chains.mainnet],
-    etherfi: [AaveV3EthereumEtherFi, chains.mainnet],
-    lido: [AaveV3EthereumLido, chains.mainnet],
-    arbitrum: [AaveV3Arbitrum, chains.arbitrum],
-    base: [AaveV3Base, chains.base],
-    scroll: [AaveV3Scroll, chains.scroll],
-    zksync: [AaveV3ZkSync, chains.zksync],
-  } as const;
 
   onMount(async () => {
     if (!window.ethereum) {
@@ -49,122 +32,98 @@
       return;
     }
 
-    const walletClient = createWalletClient({
-      chain: mainnet,
-      transport: custom(window.ethereum),
-    });
-
-    const [userAddress] = await walletClient.requestAddresses();
-
-    const results = await Promise.all(Object.entries(providers).map(async ([name, [provider, [chain, rpcUrls]]]) => {
-      const client = createPublicClient({
-        chain,
-        transport: fallback(rpcUrls.map(url => http(url))),
-      });
-
-      const pool = getContract({
-        abi: IUiPoolDataProvider_ABI,
-        address: provider.UI_POOL_DATA_PROVIDER,
-        client,
-      });
-
-      const [reserves] = await pool.read.getUserReservesData([provider.POOL_ADDRESSES_PROVIDER, userAddress]);
-
-      const data = await Promise.all(reserves
-        .filter(reserve => reserve.scaledATokenBalance > 0 || reserve.scaledVariableDebt > 0)
-        .map(async reserve => {
-          const assetData = Object.entries(provider.ASSETS).find(([, asset]) =>
-            asset.UNDERLYING?.toLowerCase() === reserve.underlyingAsset.toLowerCase()
-          );
-          if (!assetData) return null;
-
-          const [symbol, asset] = assetData;
-
-          // const symbol = await client.readContract({
-          //   abi: erc20Abi,
-          //   address: reserve.underlyingAsset,
-          //   functionName: 'symbol'
-          // });
-
-          const price = await client.readContract({
-            abi: IAaveOracle_ABI,
-            address: provider.ORACLE,
-            functionName: 'getAssetPrice',
-            args: [asset.UNDERLYING],
-          });
-          
-          return { ...reserve, symbol, price };
-        })
-      );
-
-      return [name, chain.id, data] as const;
-    }));
-
-    displayData = results
-      .filter(([, , data]) => data.length > 0)
-      .map(([provider, chainId, data]) => ({
-        chainId,
-        provider,
-        supplied: data
-          .filter(isDefined)
-          .filter(x => x.scaledATokenBalance > 0n)
-          .sort()
-          .map(x => ({
-            address: x.underlyingAsset,
-            symbol: x.symbol,
-            amount: Number(x.scaledATokenBalance / 10n**10n) / 10**8,
-            usdValue: Number(x.price * x.scaledATokenBalance / 10n**18n) / 10**8,
-          })),
-        borrowed: data
-          .filter(isDefined)
-          .filter(x => x.scaledVariableDebt > 0n)
-          .sort()
-          .map(x => ({
-            address: x.underlyingAsset,
-            symbol: x.symbol,
-            amount: Number(x.scaledVariableDebt / 10n**10n) / 10**8,
-            usdValue: Number(x.price * x.scaledVariableDebt / 10n**18n) / 10**8,
-          })),
-      }));
+    displayData = [
+      ...await getAavePositions(window.ethereum),
+      // ...await getCompoundPositions(window.ethereum),
+      ...await getMorphoPositions(window.ethereum),
+    ];
 
     view = 'normal';
   });
 </script>
 
-{view}
+<style>
+  .badge-icon {
+    --spacing: 0;
+  }
 
-<ul>
-  {#each displayData as { chainId, provider, supplied, borrowed }}
-    <li>
-      <ChainIcon id={chainId} />
-      <span class="capitalize">{provider}</span>
+  .grid {
+    .item {
+      line-height: 38px;
+    }
 
-      <div class="grid grid-cols-3">
-        <div>Supplied</div>
-        <div>Balance</div>
-        <div>USD Value</div>
+    .header {
+      .item {
+        border-bottom: 1px solid var(--color-stone-500);
+      }
+    }
 
-        {#each supplied as { address, symbol, amount, usdValue }}
-          <div title={address}>{symbol}</div>
-          <div>{amount}</div>
-          <div><Currency value={usdValue} /></div>
-        {/each}
-      </div>
+    .row {
+      &:nth-child(even) {
+        .item {
+          background: rgba(255, 255, 255, 0.05);
+        }
+      }
+    }
+  }
+</style>
 
-      {#if borrowed.length > 0}
-        <div class="grid grid-cols-3">
-          <div>Borrowed</div>
-          <div>Balance</div>
-          <div>USD Value</div>
-
-          {#each borrowed as { address, symbol, amount, usdValue }}
-            <div title={address}>{symbol}</div>
-            <div>{amount}</div>
-            <div><Currency value={usdValue} /></div>
-          {/each}
+{#if view === 'loading'}
+  <ProgressRing value={null} />
+{:else if view === 'error'}
+{:else}
+  <div class="flex flex-col gap-8">
+    {#each displayData as { chainId, provider, supplied, borrowed, total }}
+      <div>
+        <div class="flex gap-4 text-xl items-center">
+          <div class="relative inline-block">
+            <div class="p-2">
+              <ProtocolIcon id={provider} size={32} />
+            </div>
+            <div class="absolute top-0 right-0">
+              <ChainIcon id={chainId} />
+            </div>
+          </div>
+          <span class="capitalize">{provider}</span>
+          <span>(<Currency value={total} />)</span>
         </div>
-      {/if}
-    </li>
-  {/each}
-</ul>
 
+        {#if supplied.length > 0}
+          <div class="grid grid-cols-3">
+            <div class="header contents font-bold">
+              <div class="item flex">Supplied</div>
+              <div class="item flex">Balance</div>
+              <div class="item flex">USD Value</div>
+            </div>
+
+            {#each supplied as { address, symbol, amount, usdValue }}
+              <div class="row contents">
+                <div title={address}>{symbol}</div>
+                <div>{amount}</div>
+                <div><Currency value={usdValue} /></div>
+              </div>
+            {/each}
+          </div>
+        {/if}
+
+        {#if borrowed.length > 0}
+          <div class="grid grid-cols-3 mt-2">
+            <div class="header contents font-bold">
+              <div class="item flex">Borrowed</div>
+              <div class="item flex">Balance</div>
+              <div class="item flex">USD Value</div>
+            </div>
+
+            {#each borrowed as { address, symbol, amount, usdValue }}
+              <div class="row contents">
+                <div title={address}>{symbol}</div>
+                <div>{amount}</div>
+                <div><Currency value={usdValue} /></div>
+              </div>
+            {/each}
+          </div>
+        {/if}
+        </div>
+    {/each}
+  </div>
+{/if}
