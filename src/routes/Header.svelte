@@ -5,6 +5,7 @@
   const routes = [
     { text: 'Home', url: '/' },
     { text: 'Loops', url: '/loops' },
+    { text: 'Positions', url: '/positions' },
   ];
 </script>
 

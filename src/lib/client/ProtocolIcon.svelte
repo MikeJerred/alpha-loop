@@ -17,8 +17,6 @@
 
 <style>
   img {
-    width: 16px;
-    height: 16px;
     vertical-align: middle;
   }
 </style>
