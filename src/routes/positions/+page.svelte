@@ -34,7 +34,7 @@
 
     displayData = [
       ...await getAavePositions(window.ethereum),
-      // ...await getCompoundPositions(window.ethereum),
+      ...await getCompoundPositions(window.ethereum),
       ...await getMorphoPositions(window.ethereum),
     ];
 
@@ -69,8 +69,11 @@
 </style>
 
 {#if view === 'loading'}
-  <ProgressRing value={null} />
+  <div class="mx-auto">
+    <ProgressRing value={null} />
+  </div>
 {:else if view === 'error'}
+  Error
 {:else}
   <div class="flex flex-col gap-8">
     {#each displayData as { chainId, provider, supplied, borrowed, total }}
