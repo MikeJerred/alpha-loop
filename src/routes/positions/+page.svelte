@@ -43,10 +43,6 @@
 </script>
 
 <style>
-  .badge-icon {
-    --spacing: 0;
-  }
-
   .grid {
     .item {
       line-height: 38px;
@@ -60,7 +56,7 @@
 
     .row {
       &:nth-child(even) {
-        .item {
+        div {
           background: rgba(255, 255, 255, 0.05);
         }
       }
