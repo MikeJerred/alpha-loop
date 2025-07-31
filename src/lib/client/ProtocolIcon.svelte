@@ -21,12 +21,4 @@
   }
 </style>
 
-<img
-  src={image}
-  title={title ? titleText : null}
-  alt={titleText}
-  style:width={`${size}px`}
-  style:height={`${size}px`}
-  width={`${size}px`}
-  height={`${size}px`}
-/>
+<img src={image} title={title ? titleText : null} alt={titleText} style:width={`${size}px`} style:height={`${size}px`} />
