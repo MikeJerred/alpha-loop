@@ -13,6 +13,7 @@ export const load: PageLoad = async ({ url }) => {
     ['mainnet', 'arbitrum', 'base', 'linea', 'mantle', 'optimism', 'scroll', 'unichain', 'zksync'],
   );
   const depeg = toNumber(url.searchParams.get('depeg')) ?? 0.97;
+  const expiry = toNumber(url.searchParams.get('expiry')) ?? 0;
   const exposures = getValidSearchParams(url.searchParams, 'exposure', ['btc', 'eth', 'usd']);
   const minLiquidity = toNumber(url.searchParams.get('liquidity')) ?? 100_000;
   const protocols = getValidSearchParams(
@@ -37,6 +38,24 @@ export const load: PageLoad = async ({ url }) => {
       !isNaN(loop.liquidity_usd) &&
       loop.liquidity_usd >= minLiquidity
     ))
+    .filter(loop => {
+      const minExpiry = new Date();
+      minExpiry.setDate(minExpiry.getDate() + expiry);
+
+      for (const regex of [/^PT-[^-]+-(.*)$/, /^LP-[^-]+-(.*)$/]) {
+        for (const symbol of [loop.borrow_asset_symbol, loop.supply_asset_symbol]) {
+          const matches = regex.exec(symbol);
+          if (matches) {
+            const date = new Date(matches[1]);
+            if (date < minExpiry) {
+              return false;
+            }
+          }
+        }
+      }
+
+      return true;
+    })
     .map(async loop => {
       let supplyApr: number;
       let supplyYield: number;

@@ -25,6 +25,18 @@
     goto(`?${params.toString()}`, { noScroll: true });
   });
 
+  const expiry = $derived.by(() => {
+    const value = page.url.searchParams.get('expiry');
+    return value !== null && !isNaN(parseInt(value)) ? parseInt(value) : 0;
+  });
+
+  const setExpiry = throttle((value: string) => {
+    const params = new URLSearchParams(page.url.searchParams);
+    params.set('expiry', value);
+
+    goto(`?${params.toString()}`, { noScroll: true });
+  });
+
   const yieldSpan = $derived.by(() => {
     const value = page.url.searchParams.get('span');
     return value && ['day', 'week', 'month', 'year'].includes(value) ? value : 'week';
@@ -113,10 +125,25 @@
       </div>
       <input type="number"
         class="ig-input"
-        placeholder="Amount"
+        placeholder="Enter value..."
         value={liquidity}
         oninput={event => setLiquidity(event.currentTarget.value)}
       />
+    </div>
+  </label>
+
+  <label class="label flex-auto w-fit">
+    <span class="label-text">Min. Expiry</span>
+    <div class="input-group grid-cols-[auto_1fr_auto]">
+      <input type="number"
+        class="ig-input"
+        placeholder="Enter value..."
+        value={expiry}
+        oninput={event => setExpiry(event.currentTarget.value)}
+      />
+      <div class="ig-cell preset-tonal">
+        days
+      </div>
     </div>
   </label>
 
@@ -161,7 +188,7 @@
       <div class="item flex pl-2 pr-4 items-center justify-center"><ProtocolIcon id={loop.protocol} /></div>
       <div class="item flex pr-4">
         <span class="truncate">
-          {loop.supplyAsset.symbol} / {loop.borrowAsset.symbol}
+          {loop.supplyAsset.symbol} <span class="opacity-50">/</span> {loop.borrowAsset.symbol}
         </span>
       </div>
       <div class="item flex pr-4"><Currency value={loop.liquidityUSD} symbol="$" /></div>
